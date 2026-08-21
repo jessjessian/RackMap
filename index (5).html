@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+<title>RackMap – 利发冷冻货仓 Lee Huat Frozen Warehouse</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f5f6fa;--panel:#ffffff;--border:#e2e4ed;--accent:#1a6fc4;--accent2:#0a9e8a;--red:#d93025;--green:#1a7a3c;--text:#1a1d2e;--muted:#6b7280;--shadow:0 1px 4px rgba(0,0,0,.08);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;font-size:14px;}
+.login-screen{position:fixed;inset:0;background:#eef1f8;display:flex;align-items:center;justify-content:center;z-index:1000;}
+.login-box{background:#fff;border:1px solid var(--border);border-radius:16px;padding:40px;width:min(420px,92vw);box-shadow:0 8px 40px rgba(0,0,0,.12);}
+.login-logo{font-size:2rem;font-weight:800;color:var(--accent);text-align:center;margin-bottom:4px;letter-spacing:1px;}
+.login-logo span{color:var(--accent2);}
+.login-tag{text-align:center;font-size:.75rem;color:var(--muted);margin-bottom:28px;}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+.login-field input{width:100%;background:#f9fafb;border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:8px;font-size:.95rem;font-family:'Inter',sans-serif;}
+.login-field input:focus{outline:none;border-color:var(--accent);background:#fff;}
+.login-btn{width:100%;background:var(--accent);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer;margin-top:6px;}
+.login-btn:hover{background:#155fa0;}
+.login-err{background:#fdf2f2;border:1px solid #f5c6c6;color:var(--red);border-radius:6px;padding:8px 12px;font-size:.78rem;margin-top:10px;display:none;}
+.login-loading{text-align:center;color:var(--muted);font-size:.8rem;padding:10px;display:none;}
+header{background:#fff;border-bottom:2px solid var(--accent);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;box-shadow:var(--shadow);}
+.logo{font-size:1.5rem;font-weight:800;color:var(--accent);line-height:1;}
+.logo span{color:var(--accent2);}
+.tagline{font-size:.65rem;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+.toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+.user-badge{background:#eef6ff;border:1px solid #c7dff7;border-radius:20px;padding:5px 12px;font-size:.72rem;color:var(--accent);display:flex;align-items:center;gap:6px;font-weight:500;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.sync-dot.syncing{background:orange;animation:pulse 1s infinite;}
+.sync-dot.error{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+input[type="text"],input[type="number"],input[type="date"]{background:#f9fafb;border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-family:'DM Mono',monospace;font-size:.8rem;}
+input[type="text"]:focus,input[type="number"]:focus,input[type="date"]:focus{outline:none;border-color:var(--accent);background:#fff;}
+input[type="date"]{width:140px;}input[type="text"]{width:180px;}input[type="number"]{width:70px;}input[type="number"].bqty-input{width:26px!important;padding:0!important;height:16px!important;box-sizing:border-box!important;}input[type="number"].bqty-input{width:26px!important;padding:0!important;height:16px!important;box-sizing:border-box!important;}
+button{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-family:'Inter',sans-serif;font-weight:600;font-size:.78rem;cursor:pointer;transition:background .15s;white-space:nowrap;}.bqty-btn,.batch-del,.row-act,.ji-btn,.rack-del-btn,.zone-del-btn,.add-batch-link{all:unset;cursor:pointer;}
+button:hover{background:#155fa0;}
+button.sec{background:#fff;border:1px solid var(--border);color:var(--text);}
+button.sec:hover{border-color:var(--accent);color:var(--accent);}
+button.grn{background:var(--green);}button.grn:hover{background:#155f30;}
+.hint-bar{background:#f0f7ff;border-bottom:1px solid #d0e8ff;padding:4px 20px;font-size:.68rem;color:#5580aa;}
+.main{display:flex;height:calc(100vh - 70px);}
+.sidebar{width:280px;min-width:240px;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow);}
+.sidebar-header{padding:10px 13px;border-bottom:1px solid var(--border);font-size:.78rem;font-weight:700;color:var(--accent2);display:flex;align-items:center;justify-content:space-between;text-transform:uppercase;letter-spacing:.5px;}
+.sku-list{flex:1;overflow-y:auto;padding:5px;}
+.sku-list::-webkit-scrollbar{width:3px;}
+.sku-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.sku-item{background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:4px;cursor:grab;transition:border-color .2s;display:flex;align-items:flex-start;gap:8px;user-select:none;}
+.sku-item:hover{border-color:var(--accent);}
+.sku-item.selected{border-color:var(--accent);background:#eef6ff;}
+.sku-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.sku-info{flex:1;min-width:0;}
+.sku-code{font-family:'DM Mono',monospace;font-size:.75rem;font-weight:600;color:var(--accent);}
+.sku-name{font-size:.7rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sku-total{font-size:.65rem;margin-top:2px;}
+.sku-locs{font-size:.62rem;color:var(--accent2);margin-top:1px;}
+.sku-unplaced{color:#e67e00;cursor:pointer;font-weight:600;}
+.sku-unplaced:hover{text-decoration:underline;}
+.warehouse-wrap{flex:1;display:flex;flex-direction:column;min-width:0;}
+.warehouse{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px;}
+.warehouse::-webkit-scrollbar{width:5px;}.rack-row::-webkit-scrollbar{height:4px;}.rack-row::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.warehouse::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.zone-block{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;box-shadow:var(--shadow);}
+.zone-header{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.zone-accent{color:var(--accent);font-size:1rem;font-weight:800;}
+.zone-name{font-size:.85rem;font-weight:700;letter-spacing:.5px;}
+.zone-del-btn{background:transparent;border:none;color:#ccc;font-size:.7rem;cursor:pointer;padding:2px 5px;margin-left:auto;border-radius:4px;}
+.zone-del-btn:hover{color:var(--red);background:#fdf2f2;}
+.rack-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;padding-bottom:8px;}
+.rack{background:#fafbfc;border:1px solid var(--border);border-radius:8px;flex:0 0 320px;width:320px;min-width:320px;max-width:320px;box-sizing:border-box;overflow:hidden;}
+.rack.drag-over{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(10,158,138,.2);}
+.rack-header{background:#f0f4ff;padding:4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);border-radius:8px 8px 0 0;}
+.rack-name{font-family:'DM Mono',monospace;font-size:.8rem;font-weight:700;color:var(--accent);}
+.rack-del-btn{background:transparent;border:none;color:#ccc;font-size:.62rem;cursor:pointer;padding:1px 4px;border-radius:3px;}
+.rack-del-btn:hover{color:var(--red);background:#fdf2f2;}
+.shelf{border-bottom:1px solid var(--border);padding:3px 5px;min-height:36px;cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:2px;overflow:hidden;}
+.shelf:last-child{border-bottom:none;}
+.shelf:hover{background:#f0f7ff;}
+.shelf.highlight{background:#e6f7f5;}
+.shelf.drag-over-shelf{background:#d4f0ed;outline:1px dashed var(--accent2);}
+.shelf-top{display:flex;align-items:center;gap:3px;}
+.shelf-label{font-size:.56rem;color:#aaa;font-family:'DM Mono',monospace;font-weight:500;}
+.shelf-items{display:flex;flex-direction:column;gap:2px;}
+.shelf-sku-block{border-radius:4px;padding:2px 3px;}
+.shelf-sku-header{display:flex;align-items:center;gap:2px;width:100%;overflow:hidden;}
+.row-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.row-code{font-family:'DM Mono',monospace;font-size:.6rem;font-weight:700;flex:1;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px;}
+.row-code:hover{text-decoration:underline;}
+.row-total{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--green);font-weight:700;}
+.row-act{background:transparent!important;border:none!important;color:#ccc;font-size:.56rem;padding:1px 3px!important;cursor:pointer;border-radius:3px;min-width:0!important;}
+.row-act:hover{color:var(--accent);background:#eef6ff;}
+.row-act.del:hover{color:var(--red);background:#fdf2f2;}
+.batch-list{padding-left:10px;display:flex;flex-direction:column;gap:1px;margin-top:1px;}
+.batch-row{display:flex;flex-direction:column;gap:2px;padding:2px 3px;border-radius:3px;}
+.batch-row:hover{background:#f0f4ff;}
+.batch-arr{font-family:'DM Mono',monospace;font-size:.56rem;color:var(--accent2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.batch-qty-ctrl{display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
+.bqty-btn{width:15px!important;height:15px!important;border-radius:3px;border:none!important;font-size:.7rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0!important;flex-shrink:0;min-width:0!important;}
+.bqty-btn.m{background:#fde8e8;color:var(--red);}
+.bqty-btn.p{background:#e8f7ee;color:var(--green);}
+.bqty-val{font-family:'DM Mono',monospace;font-size:.62rem;font-weight:700;min-width:20px;text-align:center;}
+.batch-del{background:transparent!important;border:none!important;color:#ddd;font-size:.52rem;padding:0!important;cursor:pointer;min-width:0!important;}
+.batch-del:hover{color:var(--red);}
+.add-batch-link{font-size:.58rem;color:#aaa;cursor:pointer;padding-left:10px;margin-top:1px;}
+.add-batch-link:hover{color:var(--accent2);}
+.empty-shelf{font-size:.6rem;color:#bbb;font-style:italic;padding:2px 0;}
+.zone-z-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-width:560px;}
+.z-slot{background:#fafbfc;border:2px solid var(--border);border-radius:8px;padding:7px 5px;min-height:70px;cursor:pointer;transition:border-color .2s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.z-slot:hover{border-color:var(--accent);background:#f0f7ff;}
+.z-slot.highlight{border-color:var(--accent2);background:#e6f7f5;}
+.z-slot.drag-over-shelf{background:#d4f0ed;border-color:var(--accent2);}
+.z-slot-label{font-family:'DM Mono',monospace;font-size:.68rem;font-weight:700;color:var(--muted);}
+.z-slot-used{border-color:#b8ddb8;background:#f4faf4;}
+.add-struct-btn{background:transparent;border:1px dashed var(--border);color:var(--muted);font-size:.72rem;padding:4px 10px;border-radius:6px;cursor:pointer;margin-top:8px;}
+.add-struct-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+.add-zone-row{display:flex;gap:10px;padding:8px 0;}
+.add-zone-btn{background:#fff;border:1px dashed var(--accent);color:var(--accent);font-size:.78rem;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;}
+.add-zone-btn:hover{background:#eef6ff;}
+.stats-bar{background:#fff;border-top:1px solid var(--border);padding:6px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:.72rem;color:var(--muted);}
+.stat strong{color:var(--text);font-size:.82rem;}
+.stat-link{color:var(--accent);cursor:pointer;font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:5px;background:#eef6ff;}
+.stat-link:hover{background:#d0e8ff;}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(3px);}
+.modal{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;min-width:320px;max-width:500px;width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto;}
+.modal h3{font-size:1rem;font-weight:700;color:var(--accent);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px;}
+.modal-loc{background:#f0f7ff;border-radius:6px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--accent);margin-bottom:12px;font-weight:600;}
+.modal select{width:100%;background:#f9fafb;border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-family:'Inter',sans-serif;font-size:.85rem;margin-bottom:10px;cursor:pointer;}
+.modal select:focus{outline:none;border-color:var(--accent);}
+.modal-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.modal-row label{font-size:.75rem;color:var(--muted);font-weight:600;white-space:nowrap;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;}
+.modal-section{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;margin-bottom:6px;}
+.move-info{background:#f0f7ff;border:1px solid #c7dff7;border-radius:8px;padding:10px 12px;font-size:.8rem;margin-bottom:12px;line-height:1.8;}
+.search-panel,.history-panel,.unplaced-mgr-panel{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.panel-inner{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px;width:min(760px,94vw);max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15);}
+.sp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;}
+.sp-title{font-size:1.1rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;}
+.sp-close{background:transparent;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:3px 8px;border-radius:6px;}
+.sp-close:hover{background:#f0f0f0;}
+.sp-sku-block{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;}
+.sp-sku-title{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.sp-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.sp-code{font-family:'DM Mono',monospace;font-size:.9rem;font-weight:700;color:var(--accent);}
+.sp-name{font-size:.8rem;color:var(--muted);}
+.sp-total{font-size:.8rem;color:var(--green);font-weight:700;margin-left:auto;}
+.sp-location-block{border-left:3px solid var(--accent2);padding-left:10px;margin-bottom:10px;}
+.sp-loc-label{font-size:.72rem;color:var(--accent2);font-family:'DM Mono',monospace;margin-bottom:4px;font-weight:600;}
+.hist-table{width:100%;border-collapse:collapse;font-size:.76rem;}
+.hist-table th{font-size:.65rem;color:var(--muted);text-transform:uppercase;padding:6px 8px;text-align:left;border-bottom:2px solid var(--border);background:#f9fafb;font-weight:600;}
+.hist-table td{padding:6px 8px;border-bottom:1px solid #f0f0f0;font-family:'DM Mono',monospace;}
+.hist-table tr:hover td{background:#f9fafb;}
+.no-result{text-align:center;padding:30px;color:var(--muted);font-size:.9rem;}
+.sku-mgr-row{display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid var(--border);}
+.sku-mgr-row:hover{background:#f5f8ff;}
+.sku-mgr-row:last-child{border-bottom:none;}
+.color-pick{width:36px;height:36px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;}
+.toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:.8rem;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{border-color:var(--green);color:var(--green);}
+.toast.err{border-color:var(--red);color:var(--red);}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:14px;}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-txt{font-size:.85rem;color:var(--muted);}
+
+/* ── 寄 Ji Consignment ── */
+.ji-badge{display:inline-flex;align-items:center;background:#fff3e0;color:#e65100;font-size:.58rem;font-weight:700;padding:1px 5px;border-radius:3px;margin:0 2px;border:1px solid #ffcc80;flex-shrink:0;}
+.ji-badge-sm{display:inline-flex;align-items:center;background:#fff3e0;color:#e65100;font-size:.6rem;font-weight:700;padding:1px 4px;border-radius:3px;margin-left:3px;border:1px solid #ffcc80;}
+.ji-btn{background:transparent!important;border:1px solid #ffcc80!important;color:#e65100;font-size:.55rem;font-weight:700;padding:1px 3px!important;cursor:pointer;border-radius:3px;flex-shrink:0;min-width:0!important;}
+.ji-btn:hover{background:#fff3e0;}
+.bqty-input{width:26px!important;height:16px;border:1px solid var(--border);border-radius:3px;font-family:'DM Mono',monospace;font-size:.62rem;font-weight:700;text-align:center;padding:0 2px;background:#f9fafb;-moz-appearance:textfield;}
+.bqty-input::-webkit-inner-spin-button,.bqty-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.bqty-input:focus{outline:none;border-color:var(--accent);background:#fff;}
+</style>
+
+</head>
+<body>
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">RACK<span>MAP</span></div>
+    <div class="login-tag">利发冷冻货仓系统
+Lee Huat Frozen Warehouse System</div>
+    <div class="login-field"><label>邮箱 Email</label><input type="email" id="loginEmail" placeholder="邮箱 Email" autocomplete="email"/></div>
+    <div class="login-field"><label>密码 Password</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"/></div>
+    <button class="login-btn" onclick="doLogin()">登录 Sign In</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-loading" id="loginLoading">登录中 Signing in…</div>
+  </div>
+</div>
+<div class="loading-overlay" id="loadingOverlay" style="display:none;"><div class="spinner"></div><div class="loading-txt">加载仓库数据中 Loading warehouse data…</div></div>
+<div id="appShell" style="display:none;">
+<header>
+  <div><div class="logo">RACK<span>MAP</span></div><div class="tagline">利发冷冻货仓 Lee Huat · 冷冻货物 Frozen Goods · 实时同步 Live Sync</div></div>
+  <div class="toolbar">
+    <div style="display:flex;gap:6px;align-items:center;">
+      <input type="text" id="searchInput" placeholder="搜索商品代码或名称 Search SKU or name…" style="width:200px;"/>
+      <button onclick="doSearch()">🔍 Search</button>
+      <button class="sec" onclick="clearSearch()">清除 Clear</button>
+    </div>
+    <button class="sec" onclick="openSKUManager()">📋 商品管理 SKU Manager</button>
+    <button class="sec" onclick="window.print()">🖨 打印 Print</button>
+    <button class="grn" onclick="exportToExcel()" title="快速导出 Quick operational export (4 sheets)">📊 导出 Export</button>
+    <div class="user-badge">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="userEmail">—</span>
+      <button onclick="doLogout()" style="background:transparent;border:none;color:var(--muted);font-size:.7rem;padding:0 0 0 6px;cursor:pointer;">退出 Sign out</button>
+    </div>
+  </div>
+</header>
+<div class="stats-bar" id="statsBar"></div>
+<div class="hint-bar">📦 点击货架分配库存 Click shelf to assign &nbsp;|&nbsp; 点击产品代码查看详情 Click product code for detail &nbsp;|&nbsp; 🟢 实时同步 Live sync</div>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-header">商品目录 SKU REGISTRY <span style="font-size:.65rem;color:var(--muted);font-weight:400" id="skuCount"></span></div>
+    <div style="padding:7px 8px;border-bottom:1px solid var(--border);"><input type="text" id="skuFilter" placeholder="筛选商品 Filter SKUs…" style="width:100%;font-size:.76rem;" oninput="renderSKUList()"/></div>
+    <div class="sku-list" id="skuList"></div>
+  </div>
+  <div class="warehouse-wrap">
+    <div class="warehouse" id="warehouseMap"></div>
+  </div>
+</div>
+</div>
+
+<!-- Assign -->
+<div class="modal-bg" id="assignBg" style="display:none;"><div class="modal"><h3>分配货物至货架 Assign SKU to Slot</h3><div class="modal-loc" id="assignLoc"></div><div class="modal-section">选择商品 Select SKU</div><select id="assignSku"></select><div class="modal-section">批次信息 Batch Details</div><div class="modal-row"><label>到货日期 Arrival Date:</label><input type="date" id="assignArrival"/></div><div class="modal-row"><label>数量 Quantity:</label><input type="number" id="assignQty" value="1" min="1" oninput="wtRecalc('assign')"/></div><div class="modal-row"><label>重量规格（选填，最多3种）Weight variations (up to 3):</label></div><div class="modal-row"><label style="font-size:.72rem;color:#888;">规格 Variation 1:</label><input type="text" id="assignWeight1" placeholder="如 10kg e.g. 10kg" style="width:128px;"/><input type="number" id="assignWQty1" value="0" min="0" oninput="wtRecalc('assign')" title="此规格数量 Qty for this weight" style="width:68px;margin-left:6px;"/></div><div class="modal-row"><label style="font-size:.72rem;color:#888;">规格 Variation 2:</label><input type="text" id="assignWeight2" placeholder="选填 optional" style="width:128px;"/><input type="number" id="assignWQty2" value="0" min="0" oninput="wtRecalc('assign')" title="此规格数量 Qty for this weight" style="width:68px;margin-left:6px;"/></div><div class="modal-row"><label style="font-size:.72rem;color:#888;">规格 Variation 3:</label><input type="text" id="assignWeight3" placeholder="选填 optional" style="width:128px;"/><input type="number" id="assignWQty3" value="0" min="0" oninput="wtRecalc('assign')" title="此规格数量 Qty for this weight" style="width:68px;margin-left:6px;"/></div><div id="assignAlloc" style="border-radius:6px;padding:6px 12px;font-size:.74rem;margin-bottom:6px;background:#f5f6fa;"></div><div style="font-size:.66rem;color:#999;margin-bottom:8px;">填写数量后会按重量拆成独立批次，合计须等于总数量。Entering qty splits into one batch per weight; total must equal Quantity.</div><div class="modal-btns"><button class="sec" onclick="closeAssign()">取消 Cancel</button><button onclick="doAssign()">添加 Add</button></div></div></div>
+<!-- Add Batch -->
+<div class="modal-bg" id="addBatchBg" style="display:none;"><div class="modal"><h3>添加新批次 Add New Batch</h3><div class="modal-loc" id="addBatchLoc"></div><div class="modal-row"><label>到货日期 Arrival Date:</label><input type="date" id="abArrival"/></div><div class="modal-row"><label>数量 Quantity:</label><input type="number" id="abQty" value="1" min="1" oninput="wtRecalc('ab')"/></div><div class="modal-row"><label>重量规格（选填，最多3种）Weight variations (up to 3):</label></div><div class="modal-row"><label style="font-size:.72rem;color:#888;">规格 Variation 1:</label><input type="text" id="abWeight1" placeholder="如 10kg e.g. 10kg" style="width:128px;"/><input type="number" id="abWQty1" value="0" min="0" oninput="wtRecalc('ab')" title="此规格数量 Qty for this weight" style="width:68px;margin-left:6px;"/></div><div class="modal-row"><label style="font-size:.72rem;color:#888;">规格 Variation 2:</label><input type="text" id="abWeight2" placeholder="选填 optional" style="width:128px;"/><input type="number" id="abWQty2" value="0" min="0" oninput="wtRecalc('ab')" title="此规格数量 Qty for this weight" style="width:68px;margin-left:6px;"/></div><div class="modal-row"><label style="font-size:.72rem;color:#888;">规格 Variation 3:</label><input type="text" id="abWeight3" placeholder="选填 optional" style="width:128px;"/><input type="number" id="abWQty3" value="0" min="0" oninput="wtRecalc('ab')" title="此规格数量 Qty for this weight" style="width:68px;margin-left:6px;"/></div><div id="abAlloc" style="border-radius:6px;padding:6px 12px;font-size:.74rem;margin-bottom:6px;background:#f5f6fa;"></div><div style="font-size:.66rem;color:#999;margin-bottom:8px;">填写数量后会按重量拆成独立批次，合计须等于总数量。Entering qty splits into one batch per weight; total must equal Quantity.</div><div class="modal-btns"><button class="sec" onclick="closeAddBatch()">取消 Cancel</button><button onclick="doAddBatch()">添加批次 Add Batch</button></div></div></div>
+<!-- Move -->
+<div class="modal-bg" id="moveBg" style="display:none;"><div class="modal"><h3>移动到其他货架 Move to Another Slot</h3><div class="move-info" id="moveInfo"></div><div class="modal-section">移动至（最多 3 个目的地）Move to (up to 3 destinations):</div><div id="mvRows"></div><div style="font-size:.7rem;color:var(--muted);margin-bottom:8px;">数量为 0 的目的地将被忽略 Destinations with qty 0 are skipped</div><div class="modal-btns"><button class="sec" onclick="closeMove()">取消 Cancel</button><button onclick="confirmMove()">移动 Move</button></div></div></div>
+<!-- Item Detail -->
+<div class="modal-bg" id="itemDetailPanel" style="display:none;"><div class="modal" style="max-width:520px;"><h3>📦 Item Detail</h3><div id="itemDetailBody"></div><div class="modal-btns" style="margin-top:12px;"><button class="sec" onclick="closeItemDetail()">关闭 Close</button><button class="sec grn" id="itemDetailAddBatchBtn">＋ 添加批次 Add Batch</button><button id="itemDetailMoveBtn">⇄ 移动 Move</button></div></div></div>
+<!-- Search -->
+<div class="search-panel" id="searchPanel" style="display:none;"><div class="panel-inner"><div class="sp-header"><div class="sp-title" id="spTitle">Search Results</div><button class="sp-close" onclick="closeSearchPanel()">✕</button></div><div id="spBody"></div></div></div>
+<!-- History -->
+<div class="history-panel" id="historyPanel" style="display:none;"><div class="panel-inner"><div class="sp-header"><div class="sp-title">📋 Change History</div><button class="sp-close" onclick="closeHistory()">✕</button></div><div id="historyBody"></div></div></div>
+<!-- Unplaced Manager -->
+<div class="search-panel" id="unplacedManagerPanel" style="display:none;"><div class="panel-inner" style="max-width:640px;"><div class="sp-header"><div class="sp-title">⚠️ Unplaced Items <span id="unplacedMgrCount" style="font-size:.7rem;font-weight:400;color:var(--muted);margin-left:8px;"></span></div><div style="display:flex;gap:8px;align-items:center;"><button style="background:#d93025;font-size:.72rem;padding:5px 12px;" onclick="deleteAllUnplaced()">🗑 全部删除 Delete All</button><button class="sp-close sec" onclick="closeUnplacedManager()">✕</button></div></div><div style="font-size:.75rem;color:var(--muted);margin-bottom:12px;">以下货物在数据库中但未分配到有效货架。请重新分配或删除。
+These items are in the database but not assigned to a valid rack slot.</div><div id="unplacedMgrBody"></div></div></div>
+<!-- SKU Manager -->
+<div class="search-panel" id="skuManagerPanel" style="display:none;"><div class="panel-inner" style="max-width:620px;"><div class="sp-header"><div class="sp-title">📋 SKU Manager <span id="skuMgrCount" style="font-size:.7rem;font-weight:400;color:var(--muted);margin-left:8px;"></span></div><button class="sp-close" onclick="closeSKUManager()">✕</button></div><div style="background:#f0f7ff;border:1px solid #c7dff7;border-radius:10px;padding:14px;margin-bottom:14px;"><div style="font-size:.72rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">➕ Add New SKU</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><div><label style="font-size:.68rem;color:var(--muted);display:block;margin-bottom:3px;">商品代码 CODE</label><input type="text" id="newSkuCode" placeholder="如 51010/15CV" style="width:140px;text-transform:uppercase;"/></div><div style="flex:1;min-width:180px;"><label style="font-size:.68rem;color:var(--muted);display:block;margin-bottom:3px;">名称 NAME</label><input type="text" id="newSkuName" placeholder="商品名称 Item name" style="width:100%;"/></div><div><label style="font-size:.68rem;color:var(--muted);display:block;margin-bottom:3px;">颜色 COLOUR</label><input type="color" id="newSkuColor" value="#1a6fc4" class="color-pick"/></div><div style="padding-top:16px;"><button onclick="addSKU()">添加商品 Add SKU</button></div></div></div><input type="text" id="skuMgrFilter" placeholder="筛选商品 Filter SKUs..." style="width:100%;margin-bottom:10px;" oninput="renderSKUManagerList()"/><div id="skuMgrList" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;"></div></div></div>
+<!-- Edit SKU -->
+<div class="modal-bg" id="editSkuPanel" style="display:none;"><div class="modal" style="max-width:400px;"><h3>编辑商品 Edit SKU</h3><div class="modal-loc" id="editSkuCodeLbl"></div><input type="hidden" id="editSkuCodeHidden"/><div class="modal-row"><label>名称 Name:</label><input type="text" id="editSkuName" style="flex:1;width:auto;"/></div><div class="modal-row"><label>颜色 Colour:</label><input type="color" id="editSkuColor" class="color-pick"/></div><div class="modal-btns"><button class="sec" onclick="closeEditSKU()">取消 Cancel</button><button onclick="saveEditSKU()">保存 Save</button></div></div></div>
+
+
+<!-- 寄 Ji Consignment Modal -->
+<div class="modal-bg" id="jiModalBg" style="display:none;">
+  <div class="modal" style="max-width:420px;">
+    <h3>📦 设置寄存 Set Ji Consignment</h3>
+    <div class="modal-loc" id="jiModalSku" style="margin-bottom:10px;"></div>
+    <input type="hidden" id="jiModalBatchId"/>
+    <input type="hidden" id="jiModalShelfId"/>
+    <input type="hidden" id="jiModalCode"/>
+    <div style="background:#fff8e6;border:1px solid #ffcc80;border-radius:8px;padding:10px 14px;font-size:.78rem;margin-bottom:12px;color:#7a5500;">
+      ⚠️ 寄存货物仍在货架上，但不计入可用库存。<br/>
+      <span style="color:#888;font-size:.72rem;">Ji items remain on shelf but are excluded from available stock count.</span>
+    </div>
+    <div class="modal-section">寄存客户（最多 3 家）Ji Customers (up to 3) &nbsp;|&nbsp; 批次总量 batch qty: <span id="jiModalMax">0</span></div>
+    <div id="jiRows"></div>
+    <div style="background:#f0f4ff;border-radius:6px;padding:7px 12px;font-size:.78rem;margin-bottom:10px;">
+      合计寄存 Total Ji: <strong id="jiRunTotal" style="color:#e65100;">0</strong>
+      &nbsp;·&nbsp; 剩余可用 Remaining avail: <strong id="jiRunAvail" style="color:#1a7a3c;">0</strong>
+    </div>
+    <div class="modal-btns" style="justify-content:space-between;">
+      <button class="sec" style="color:#e65100;border-color:#ffcc80;" onclick="clearJi()">清除寄存 Clear Ji</button>
+      <div style="display:flex;gap:8px;">
+        <button class="sec" onclick="closeJiModal()">取消 Cancel</button>
+        <button onclick="saveJi()">保存 Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+const SUPABASE_URL='https://xndxogfqaddzzyegtmzl.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhuZHhvZ2ZxYWRkenp5ZWd0bXpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDM4NDYsImV4cCI6MjA4ODU3OTg0Nn0.S0fhpOQwvaAtZKovi1dcTgJ72mOenzX86lTFbWABoL4';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+
+
+const ZONES = [
+  {id:'zR1',name:'R1',racks:[
+    {id:'rR1A',name:'R1A',shelves:[{id:'sR1A_1',name:'Top'},{id:'sR1A_2',name:'Middle'},{id:'sR1A_3',name:'Bottom'}]},
+    {id:'rR1B',name:'R1B',shelves:[{id:'sR1B_1',name:'Top'},{id:'sR1B_2',name:'Middle'},{id:'sR1B_3',name:'Bottom'}]},
+    {id:'rR1C',name:'R1C',shelves:[{id:'sR1C_1',name:'Top'},{id:'sR1C_2',name:'Middle'},{id:'sR1C_3',name:'Bottom'}]},
+    {id:'rR1D',name:'R1D',shelves:[{id:'sR1D_1',name:'Top'},{id:'sR1D_2',name:'Middle'},{id:'sR1D_3',name:'Bottom'}]},
+    {id:'rR1E',name:'R1E',shelves:[{id:'sR1E_1',name:'Top'},{id:'sR1E_2',name:'Middle'},{id:'sR1E_3',name:'Bottom'}]},
+    {id:'rR1F',name:'R1F',shelves:[{id:'sR1F_1',name:'Top'},{id:'sR1F_2',name:'Middle'},{id:'sR1F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR2',name:'R2',racks:[
+    {id:'rR2A',name:'R2A',shelves:[{id:'sR2A_1',name:'Top'},{id:'sR2A_2',name:'Middle'},{id:'sR2A_3',name:'Bottom'}]},
+    {id:'rR2B',name:'R2B',shelves:[{id:'sR2B_1',name:'Top'},{id:'sR2B_2',name:'Middle'},{id:'sR2B_3',name:'Bottom'}]},
+    {id:'rR2C',name:'R2C',shelves:[{id:'sR2C_1',name:'Top'},{id:'sR2C_2',name:'Middle'},{id:'sR2C_3',name:'Bottom'}]},
+    {id:'rR2D',name:'R2D',shelves:[{id:'sR2D_1',name:'Top'},{id:'sR2D_2',name:'Middle'},{id:'sR2D_3',name:'Bottom'}]},
+    {id:'rR2E',name:'R2E',shelves:[{id:'sR2E_1',name:'Top'},{id:'sR2E_2',name:'Middle'},{id:'sR2E_3',name:'Bottom'}]},
+    {id:'rR2F',name:'R2F',shelves:[{id:'sR2F_1',name:'Top'},{id:'sR2F_2',name:'Middle'},{id:'sR2F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR3',name:'R3',racks:[
+    {id:'rR3A',name:'R3A',shelves:[{id:'sR3A_1',name:'Top'},{id:'sR3A_2',name:'Middle'},{id:'sR3A_3',name:'Bottom'}]},
+    {id:'rR3B',name:'R3B',shelves:[{id:'sR3B_1',name:'Top'},{id:'sR3B_2',name:'Middle'},{id:'sR3B_3',name:'Bottom'}]},
+    {id:'rR3C',name:'R3C',shelves:[{id:'sR3C_1',name:'Top'},{id:'sR3C_2',name:'Middle'},{id:'sR3C_3',name:'Bottom'}]},
+    {id:'rR3D',name:'R3D',shelves:[{id:'sR3D_1',name:'Top'},{id:'sR3D_2',name:'Middle'},{id:'sR3D_3',name:'Bottom'}]},
+    {id:'rR3E',name:'R3E',shelves:[{id:'sR3E_1',name:'Top'},{id:'sR3E_2',name:'Middle'},{id:'sR3E_3',name:'Bottom'}]},
+    {id:'rR3F',name:'R3F',shelves:[{id:'sR3F_1',name:'Top'},{id:'sR3F_2',name:'Middle'},{id:'sR3F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR4',name:'R4',racks:[
+    {id:'rR4A',name:'R4A',shelves:[{id:'sR4A_1',name:'Top'},{id:'sR4A_2',name:'Middle'},{id:'sR4A_3',name:'Bottom'}]},
+    {id:'rR4B',name:'R4B',shelves:[{id:'sR4B_1',name:'Top'},{id:'sR4B_2',name:'Middle'},{id:'sR4B_3',name:'Bottom'}]},
+    {id:'rR4C',name:'R4C',shelves:[{id:'sR4C_1',name:'Top'},{id:'sR4C_2',name:'Middle'},{id:'sR4C_3',name:'Bottom'}]},
+    {id:'rR4D',name:'R4D',shelves:[{id:'sR4D_1',name:'Top'},{id:'sR4D_2',name:'Middle'},{id:'sR4D_3',name:'Bottom'}]},
+    {id:'rR4E',name:'R4E',shelves:[{id:'sR4E_1',name:'Top'},{id:'sR4E_2',name:'Middle'},{id:'sR4E_3',name:'Bottom'}]},
+    {id:'rR4F',name:'R4F',shelves:[{id:'sR4F_1',name:'Top'},{id:'sR4F_2',name:'Middle'},{id:'sR4F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR5',name:'R5',racks:[
+    {id:'rR5A',name:'R5A',shelves:[{id:'sR5A_1',name:'Top'},{id:'sR5A_2',name:'Middle'},{id:'sR5A_3',name:'Bottom'}]},
+    {id:'rR5B',name:'R5B',shelves:[{id:'sR5B_1',name:'Top'},{id:'sR5B_2',name:'Middle'},{id:'sR5B_3',name:'Bottom'}]},
+    {id:'rR5C',name:'R5C',shelves:[{id:'sR5C_1',name:'Top'},{id:'sR5C_2',name:'Middle'},{id:'sR5C_3',name:'Bottom'}]},
+    {id:'rR5D',name:'R5D',shelves:[{id:'sR5D_1',name:'Top'},{id:'sR5D_2',name:'Middle'},{id:'sR5D_3',name:'Bottom'}]},
+    {id:'rR5E',name:'R5E',shelves:[{id:'sR5E_1',name:'Top'},{id:'sR5E_2',name:'Middle'},{id:'sR5E_3',name:'Bottom'}]},
+    {id:'rR5F',name:'R5F',shelves:[{id:'sR5F_1',name:'Top'},{id:'sR5F_2',name:'Middle'},{id:'sR5F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR6',name:'R6',racks:[
+    {id:'rR6A',name:'R6A',shelves:[{id:'sR6A_1',name:'Top'},{id:'sR6A_2',name:'Middle'},{id:'sR6A_3',name:'Bottom'}]},
+    {id:'rR6B',name:'R6B',shelves:[{id:'sR6B_1',name:'Top'},{id:'sR6B_2',name:'Middle'},{id:'sR6B_3',name:'Bottom'}]},
+    {id:'rR6C',name:'R6C',shelves:[{id:'sR6C_1',name:'Top'},{id:'sR6C_2',name:'Middle'},{id:'sR6C_3',name:'Bottom'}]},
+    {id:'rR6D',name:'R6D',shelves:[{id:'sR6D_1',name:'Top'},{id:'sR6D_2',name:'Middle'},{id:'sR6D_3',name:'Bottom'}]},
+    {id:'rR6E',name:'R6E',shelves:[{id:'sR6E_1',name:'Top'},{id:'sR6E_2',name:'Middle'},{id:'sR6E_3',name:'Bottom'}]},
+    {id:'rR6F',name:'R6F',shelves:[{id:'sR6F_1',name:'Top'},{id:'sR6F_2',name:'Middle'},{id:'sR6F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR7',name:'R7',racks:[
+    {id:'rR7A',name:'R7A',shelves:[{id:'sR7A_1',name:'Top'},{id:'sR7A_2',name:'Middle'},{id:'sR7A_3',name:'Bottom'}]},
+    {id:'rR7B',name:'R7B',shelves:[{id:'sR7B_1',name:'Top'},{id:'sR7B_2',name:'Middle'},{id:'sR7B_3',name:'Bottom'}]},
+    {id:'rR7C',name:'R7C',shelves:[{id:'sR7C_1',name:'Top'},{id:'sR7C_2',name:'Middle'},{id:'sR7C_3',name:'Bottom'}]},
+    {id:'rR7D',name:'R7D',shelves:[{id:'sR7D_1',name:'Top'},{id:'sR7D_2',name:'Middle'},{id:'sR7D_3',name:'Bottom'}]},
+    {id:'rR7E',name:'R7E',shelves:[{id:'sR7E_1',name:'Top'},{id:'sR7E_2',name:'Middle'},{id:'sR7E_3',name:'Bottom'}]},
+    {id:'rR7F',name:'R7F',shelves:[{id:'sR7F_1',name:'Top'},{id:'sR7F_2',name:'Middle'},{id:'sR7F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR8',name:'R8',racks:[
+    {id:'rR8A',name:'R8A',shelves:[{id:'sR8A_1',name:'Top'},{id:'sR8A_2',name:'Middle'},{id:'sR8A_3',name:'Bottom'}]},
+    {id:'rR8B',name:'R8B',shelves:[{id:'sR8B_1',name:'Top'},{id:'sR8B_2',name:'Middle'},{id:'sR8B_3',name:'Bottom'}]},
+    {id:'rR8C',name:'R8C',shelves:[{id:'sR8C_1',name:'Top'},{id:'sR8C_2',name:'Middle'},{id:'sR8C_3',name:'Bottom'}]},
+    {id:'rR8D',name:'R8D',shelves:[{id:'sR8D_1',name:'Top'},{id:'sR8D_2',name:'Middle'},{id:'sR8D_3',name:'Bottom'}]},
+    {id:'rR8E',name:'R8E',shelves:[{id:'sR8E_1',name:'Top'},{id:'sR8E_2',name:'Middle'},{id:'sR8E_3',name:'Bottom'}]},
+    {id:'rR8F',name:'R8F',shelves:[{id:'sR8F_1',name:'Top'},{id:'sR8F_2',name:'Middle'},{id:'sR8F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR9',name:'R9',racks:[
+    {id:'rR9A',name:'R9A',shelves:[{id:'sR9A_1',name:'Top'},{id:'sR9A_2',name:'Middle'},{id:'sR9A_3',name:'Bottom'}]},
+    {id:'rR9B',name:'R9B',shelves:[{id:'sR9B_1',name:'Top'},{id:'sR9B_2',name:'Middle'},{id:'sR9B_3',name:'Bottom'}]},
+    {id:'rR9C',name:'R9C',shelves:[{id:'sR9C_1',name:'Top'},{id:'sR9C_2',name:'Middle'},{id:'sR9C_3',name:'Bottom'}]},
+    {id:'rR9D',name:'R9D',shelves:[{id:'sR9D_1',name:'Top'},{id:'sR9D_2',name:'Middle'},{id:'sR9D_3',name:'Bottom'}]},
+    {id:'rR9E',name:'R9E',shelves:[{id:'sR9E_1',name:'Top'},{id:'sR9E_2',name:'Middle'},{id:'sR9E_3',name:'Bottom'}]},
+    {id:'rR9F',name:'R9F',shelves:[{id:'sR9F_1',name:'Top'},{id:'sR9F_2',name:'Middle'},{id:'sR9F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR10',name:'R10',racks:[
+    {id:'rR10A',name:'R10A',shelves:[{id:'sR10A_1',name:'Top'},{id:'sR10A_2',name:'Middle'},{id:'sR10A_3',name:'Bottom'}]},
+    {id:'rR10B',name:'R10B',shelves:[{id:'sR10B_1',name:'Top'},{id:'sR10B_2',name:'Middle'},{id:'sR10B_3',name:'Bottom'}]},
+    {id:'rR10C',name:'R10C',shelves:[{id:'sR10C_1',name:'Top'},{id:'sR10C_2',name:'Middle'},{id:'sR10C_3',name:'Bottom'}]},
+    {id:'rR10D',name:'R10D',shelves:[{id:'sR10D_1',name:'Top'},{id:'sR10D_2',name:'Middle'},{id:'sR10D_3',name:'Bottom'}]},
+    {id:'rR10E',name:'R10E',shelves:[{id:'sR10E_1',name:'Top'},{id:'sR10E_2',name:'Middle'},{id:'sR10E_3',name:'Bottom'}]},
+    {id:'rR10F',name:'R10F',shelves:[{id:'sR10F_1',name:'Top'},{id:'sR10F_2',name:'Middle'},{id:'sR10F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR11',name:'R11',racks:[
+    {id:'rR11A',name:'R11A',shelves:[{id:'sR11A_1',name:'Top'},{id:'sR11A_2',name:'Middle'},{id:'sR11A_3',name:'Bottom'}]},
+    {id:'rR11B',name:'R11B',shelves:[{id:'sR11B_1',name:'Top'},{id:'sR11B_2',name:'Middle'},{id:'sR11B_3',name:'Bottom'}]},
+    {id:'rR11C',name:'R11C',shelves:[{id:'sR11C_1',name:'Top'},{id:'sR11C_2',name:'Middle'},{id:'sR11C_3',name:'Bottom'}]},
+    {id:'rR11D',name:'R11D',shelves:[{id:'sR11D_1',name:'Top'},{id:'sR11D_2',name:'Middle'},{id:'sR11D_3',name:'Bottom'}]},
+    {id:'rR11E',name:'R11E',shelves:[{id:'sR11E_1',name:'Top'},{id:'sR11E_2',name:'Middle'},{id:'sR11E_3',name:'Bottom'}]},
+    {id:'rR11F',name:'R11F',shelves:[{id:'sR11F_1',name:'Top'},{id:'sR11F_2',name:'Middle'},{id:'sR11F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR12',name:'R12',racks:[
+    {id:'rR12A',name:'R12A',shelves:[{id:'sR12A_1',name:'Top'},{id:'sR12A_2',name:'Middle'},{id:'sR12A_3',name:'Bottom'}]},
+    {id:'rR12B',name:'R12B',shelves:[{id:'sR12B_1',name:'Top'},{id:'sR12B_2',name:'Middle'},{id:'sR12B_3',name:'Bottom'}]},
+    {id:'rR12C',name:'R12C',shelves:[{id:'sR12C_1',name:'Top'},{id:'sR12C_2',name:'Middle'},{id:'sR12C_3',name:'Bottom'}]},
+    {id:'rR12D',name:'R12D',shelves:[{id:'sR12D_1',name:'Top'},{id:'sR12D_2',name:'Middle'},{id:'sR12D_3',name:'Bottom'}]},
+    {id:'rR12E',name:'R12E',shelves:[{id:'sR12E_1',name:'Top'},{id:'sR12E_2',name:'Middle'},{id:'sR12E_3',name:'Bottom'}]},
+    {id:'rR12F',name:'R12F',shelves:[{id:'sR12F_1',name:'Top'},{id:'sR12F_2',name:'Middle'},{id:'sR12F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR13',name:'R13',racks:[
+    {id:'rR13A',name:'R13A',shelves:[{id:'sR13A_1',name:'Top'},{id:'sR13A_2',name:'Middle'},{id:'sR13A_3',name:'Bottom'}]},
+    {id:'rR13B',name:'R13B',shelves:[{id:'sR13B_1',name:'Top'},{id:'sR13B_2',name:'Middle'},{id:'sR13B_3',name:'Bottom'}]},
+    {id:'rR13C',name:'R13C',shelves:[{id:'sR13C_1',name:'Top'},{id:'sR13C_2',name:'Middle'},{id:'sR13C_3',name:'Bottom'}]},
+    {id:'rR13D',name:'R13D',shelves:[{id:'sR13D_1',name:'Top'},{id:'sR13D_2',name:'Middle'},{id:'sR13D_3',name:'Bottom'}]},
+    {id:'rR13E',name:'R13E',shelves:[{id:'sR13E_1',name:'Top'},{id:'sR13E_2',name:'Middle'},{id:'sR13E_3',name:'Bottom'}]},
+    {id:'rR13F',name:'R13F',shelves:[{id:'sR13F_1',name:'Top'},{id:'sR13F_2',name:'Middle'},{id:'sR13F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR14',name:'R14',racks:[
+    {id:'rR14A',name:'R14A',shelves:[{id:'sR14A_1',name:'Top'},{id:'sR14A_2',name:'Middle'},{id:'sR14A_3',name:'Bottom'}]},
+    {id:'rR14B',name:'R14B',shelves:[{id:'sR14B_1',name:'Top'},{id:'sR14B_2',name:'Middle'},{id:'sR14B_3',name:'Bottom'}]},
+    {id:'rR14C',name:'R14C',shelves:[{id:'sR14C_1',name:'Top'},{id:'sR14C_2',name:'Middle'},{id:'sR14C_3',name:'Bottom'}]},
+    {id:'rR14D',name:'R14D',shelves:[{id:'sR14D_1',name:'Top'},{id:'sR14D_2',name:'Middle'},{id:'sR14D_3',name:'Bottom'}]},
+    {id:'rR14E',name:'R14E',shelves:[{id:'sR14E_1',name:'Top'},{id:'sR14E_2',name:'Middle'},{id:'sR14E_3',name:'Bottom'}]},
+    {id:'rR14F',name:'R14F',shelves:[{id:'sR14F_1',name:'Top'},{id:'sR14F_2',name:'Middle'},{id:'sR14F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR15',name:'R15',racks:[
+    {id:'rR15A',name:'R15A',shelves:[{id:'sR15A_1',name:'Top'},{id:'sR15A_2',name:'Middle'},{id:'sR15A_3',name:'Bottom'}]},
+    {id:'rR15B',name:'R15B',shelves:[{id:'sR15B_1',name:'Top'},{id:'sR15B_2',name:'Middle'},{id:'sR15B_3',name:'Bottom'}]},
+    {id:'rR15C',name:'R15C',shelves:[{id:'sR15C_1',name:'Top'},{id:'sR15C_2',name:'Middle'},{id:'sR15C_3',name:'Bottom'}]},
+    {id:'rR15D',name:'R15D',shelves:[{id:'sR15D_1',name:'Top'},{id:'sR15D_2',name:'Middle'},{id:'sR15D_3',name:'Bottom'}]},
+    {id:'rR15E',name:'R15E',shelves:[{id:'sR15E_1',name:'Top'},{id:'sR15E_2',name:'Middle'},{id:'sR15E_3',name:'Bottom'}]},
+    {id:'rR15F',name:'R15F',shelves:[{id:'sR15F_1',name:'Top'},{id:'sR15F_2',name:'Middle'},{id:'sR15F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR16',name:'R16',racks:[
+    {id:'rR16A',name:'R16A',shelves:[{id:'sR16A_1',name:'Top'},{id:'sR16A_2',name:'Middle'},{id:'sR16A_3',name:'Bottom'}]},
+    {id:'rR16B',name:'R16B',shelves:[{id:'sR16B_1',name:'Top'},{id:'sR16B_2',name:'Middle'},{id:'sR16B_3',name:'Bottom'}]},
+    {id:'rR16C',name:'R16C',shelves:[{id:'sR16C_1',name:'Top'},{id:'sR16C_2',name:'Middle'},{id:'sR16C_3',name:'Bottom'}]},
+    {id:'rR16D',name:'R16D',shelves:[{id:'sR16D_1',name:'Top'},{id:'sR16D_2',name:'Middle'},{id:'sR16D_3',name:'Bottom'}]},
+    {id:'rR16E',name:'R16E',shelves:[{id:'sR16E_1',name:'Top'},{id:'sR16E_2',name:'Middle'},{id:'sR16E_3',name:'Bottom'}]},
+    {id:'rR16F',name:'R16F',shelves:[{id:'sR16F_1',name:'Top'},{id:'sR16F_2',name:'Middle'},{id:'sR16F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR17',name:'R17',racks:[
+    {id:'rR17A',name:'R17A',shelves:[{id:'sR17A_1',name:'Top'},{id:'sR17A_2',name:'Middle'},{id:'sR17A_3',name:'Bottom'}]},
+    {id:'rR17B',name:'R17B',shelves:[{id:'sR17B_1',name:'Top'},{id:'sR17B_2',name:'Middle'},{id:'sR17B_3',name:'Bottom'}]},
+    {id:'rR17C',name:'R17C',shelves:[{id:'sR17C_1',name:'Top'},{id:'sR17C_2',name:'Middle'},{id:'sR17C_3',name:'Bottom'}]},
+    {id:'rR17D',name:'R17D',shelves:[{id:'sR17D_1',name:'Top'},{id:'sR17D_2',name:'Middle'},{id:'sR17D_3',name:'Bottom'}]},
+    {id:'rR17E',name:'R17E',shelves:[{id:'sR17E_1',name:'Top'},{id:'sR17E_2',name:'Middle'},{id:'sR17E_3',name:'Bottom'}]},
+    {id:'rR17F',name:'R17F',shelves:[{id:'sR17F_1',name:'Top'},{id:'sR17F_2',name:'Middle'},{id:'sR17F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR18',name:'R18',racks:[
+    {id:'rR18A',name:'R18A',shelves:[{id:'sR18A_1',name:'Top'},{id:'sR18A_2',name:'Middle'},{id:'sR18A_3',name:'Bottom'}]},
+    {id:'rR18B',name:'R18B',shelves:[{id:'sR18B_1',name:'Top'},{id:'sR18B_2',name:'Middle'},{id:'sR18B_3',name:'Bottom'}]},
+    {id:'rR18C',name:'R18C',shelves:[{id:'sR18C_1',name:'Top'},{id:'sR18C_2',name:'Middle'},{id:'sR18C_3',name:'Bottom'}]},
+    {id:'rR18D',name:'R18D',shelves:[{id:'sR18D_1',name:'Top'},{id:'sR18D_2',name:'Middle'},{id:'sR18D_3',name:'Bottom'}]},
+    {id:'rR18E',name:'R18E',shelves:[{id:'sR18E_1',name:'Top'},{id:'sR18E_2',name:'Middle'},{id:'sR18E_3',name:'Bottom'}]},
+    {id:'rR18F',name:'R18F',shelves:[{id:'sR18F_1',name:'Top'},{id:'sR18F_2',name:'Middle'},{id:'sR18F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR19',name:'R19',racks:[
+    {id:'rR19A',name:'R19A',shelves:[{id:'sR19A_1',name:'Top'},{id:'sR19A_2',name:'Middle'},{id:'sR19A_3',name:'Bottom'}]},
+    {id:'rR19B',name:'R19B',shelves:[{id:'sR19B_1',name:'Top'},{id:'sR19B_2',name:'Middle'},{id:'sR19B_3',name:'Bottom'}]},
+    {id:'rR19C',name:'R19C',shelves:[{id:'sR19C_1',name:'Top'},{id:'sR19C_2',name:'Middle'},{id:'sR19C_3',name:'Bottom'}]},
+    {id:'rR19D',name:'R19D',shelves:[{id:'sR19D_1',name:'Top'},{id:'sR19D_2',name:'Middle'},{id:'sR19D_3',name:'Bottom'}]},
+    {id:'rR19E',name:'R19E',shelves:[{id:'sR19E_1',name:'Top'},{id:'sR19E_2',name:'Middle'},{id:'sR19E_3',name:'Bottom'}]},
+    {id:'rR19F',name:'R19F',shelves:[{id:'sR19F_1',name:'Top'},{id:'sR19F_2',name:'Middle'},{id:'sR19F_3',name:'Bottom'}]}
+  ]},
+  {id:'zR20',name:'R20',racks:[
+    {id:'rR20A',name:'R20A',shelves:[{id:'sR20A_1',name:'Top'},{id:'sR20A_2',name:'Middle'},{id:'sR20A_3',name:'Bottom'}]},
+    {id:'rR20B',name:'R20B',shelves:[{id:'sR20B_1',name:'Top'},{id:'sR20B_2',name:'Middle'},{id:'sR20B_3',name:'Bottom'}]},
+    {id:'rR20C',name:'R20C',shelves:[{id:'sR20C_1',name:'Top'},{id:'sR20C_2',name:'Middle'},{id:'sR20C_3',name:'Bottom'}]},
+    {id:'rR20D',name:'R20D',shelves:[{id:'sR20D_1',name:'Top'},{id:'sR20D_2',name:'Middle'},{id:'sR20D_3',name:'Bottom'}]},
+    {id:'rR20E',name:'R20E',shelves:[{id:'sR20E_1',name:'Top'},{id:'sR20E_2',name:'Middle'},{id:'sR20E_3',name:'Bottom'}]},
+    {id:'rR20F',name:'R20F',shelves:[{id:'sR20F_1',name:'Top'},{id:'sR20F_2',name:'Middle'},{id:'sR20F_3',name:'Bottom'}]}
+  ]},
+  {id:'zL1',name:'L1',racks:[
+    {id:'rL1A',name:'L1A',shelves:[{id:'sL1A_1',name:'Top'},{id:'sL1A_2',name:'Middle'},{id:'sL1A_3',name:'Bottom'}]},
+    {id:'rL1B',name:'L1B',shelves:[{id:'sL1B_1',name:'Top'},{id:'sL1B_2',name:'Middle'},{id:'sL1B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL2',name:'L2',racks:[
+    {id:'rL2A',name:'L2A',shelves:[{id:'sL2A_1',name:'Top'},{id:'sL2A_2',name:'Middle'},{id:'sL2A_3',name:'Bottom'}]},
+    {id:'rL2B',name:'L2B',shelves:[{id:'sL2B_1',name:'Top'},{id:'sL2B_2',name:'Middle'},{id:'sL2B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL3',name:'L3',racks:[
+    {id:'rL3A',name:'L3A',shelves:[{id:'sL3A_1',name:'Top'},{id:'sL3A_2',name:'Middle'},{id:'sL3A_3',name:'Bottom'}]},
+    {id:'rL3B',name:'L3B',shelves:[{id:'sL3B_1',name:'Top'},{id:'sL3B_2',name:'Middle'},{id:'sL3B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL4',name:'L4',racks:[
+    {id:'rL4A',name:'L4A',shelves:[{id:'sL4A_1',name:'Top'},{id:'sL4A_2',name:'Middle'},{id:'sL4A_3',name:'Bottom'}]},
+    {id:'rL4B',name:'L4B',shelves:[{id:'sL4B_1',name:'Top'},{id:'sL4B_2',name:'Middle'},{id:'sL4B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL5',name:'L5',racks:[
+    {id:'rL5A',name:'L5A',shelves:[{id:'sL5A_1',name:'Top'},{id:'sL5A_2',name:'Middle'},{id:'sL5A_3',name:'Bottom'}]},
+    {id:'rL5B',name:'L5B',shelves:[{id:'sL5B_1',name:'Top'},{id:'sL5B_2',name:'Middle'},{id:'sL5B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL6',name:'L6',racks:[
+    {id:'rL6A',name:'L6A',shelves:[{id:'sL6A_1',name:'Top'},{id:'sL6A_2',name:'Middle'},{id:'sL6A_3',name:'Bottom'}]},
+    {id:'rL6B',name:'L6B',shelves:[{id:'sL6B_1',name:'Top'},{id:'sL6B_2',name:'Middle'},{id:'sL6B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL7',name:'L7',racks:[
+    {id:'rL7A',name:'L7A',shelves:[{id:'sL7A_1',name:'Top'},{id:'sL7A_2',name:'Middle'},{id:'sL7A_3',name:'Bottom'}]},
+    {id:'rL7B',name:'L7B',shelves:[{id:'sL7B_1',name:'Top'},{id:'sL7B_2',name:'Middle'},{id:'sL7B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL8',name:'L8',racks:[
+    {id:'rL8A',name:'L8A',shelves:[{id:'sL8A_1',name:'Top'},{id:'sL8A_2',name:'Middle'},{id:'sL8A_3',name:'Bottom'}]},
+    {id:'rL8B',name:'L8B',shelves:[{id:'sL8B_1',name:'Top'},{id:'sL8B_2',name:'Middle'},{id:'sL8B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL9',name:'L9',racks:[
+    {id:'rL9A',name:'L9A',shelves:[{id:'sL9A_1',name:'Top'},{id:'sL9A_2',name:'Middle'},{id:'sL9A_3',name:'Bottom'}]},
+    {id:'rL9B',name:'L9B',shelves:[{id:'sL9B_1',name:'Top'},{id:'sL9B_2',name:'Middle'},{id:'sL9B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL10',name:'L10',racks:[
+    {id:'rL10A',name:'L10A',shelves:[{id:'sL10A_1',name:'Top'},{id:'sL10A_2',name:'Middle'},{id:'sL10A_3',name:'Bottom'}]},
+    {id:'rL10B',name:'L10B',shelves:[{id:'sL10B_1',name:'Top'},{id:'sL10B_2',name:'Middle'},{id:'sL10B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL11',name:'L11',racks:[
+    {id:'rL11A',name:'L11A',shelves:[{id:'sL11A_1',name:'Top'},{id:'sL11A_2',name:'Middle'},{id:'sL11A_3',name:'Bottom'}]},
+    {id:'rL11B',name:'L11B',shelves:[{id:'sL11B_1',name:'Top'},{id:'sL11B_2',name:'Middle'},{id:'sL11B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL12',name:'L12',racks:[
+    {id:'rL12A',name:'L12A',shelves:[{id:'sL12A_1',name:'Top'},{id:'sL12A_2',name:'Middle'},{id:'sL12A_3',name:'Bottom'}]},
+    {id:'rL12B',name:'L12B',shelves:[{id:'sL12B_1',name:'Top'},{id:'sL12B_2',name:'Middle'},{id:'sL12B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL13',name:'L13',racks:[
+    {id:'rL13A',name:'L13A',shelves:[{id:'sL13A_1',name:'Top'},{id:'sL13A_2',name:'Middle'},{id:'sL13A_3',name:'Bottom'}]},
+    {id:'rL13B',name:'L13B',shelves:[{id:'sL13B_1',name:'Top'},{id:'sL13B_2',name:'Middle'},{id:'sL13B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL14',name:'L14',racks:[
+    {id:'rL14A',name:'L14A',shelves:[{id:'sL14A_1',name:'Top'},{id:'sL14A_2',name:'Middle'},{id:'sL14A_3',name:'Bottom'}]},
+    {id:'rL14B',name:'L14B',shelves:[{id:'sL14B_1',name:'Top'},{id:'sL14B_2',name:'Middle'},{id:'sL14B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL15',name:'L15',racks:[
+    {id:'rL15A',name:'L15A',shelves:[{id:'sL15A_1',name:'Top'},{id:'sL15A_2',name:'Middle'},{id:'sL15A_3',name:'Bottom'}]},
+    {id:'rL15B',name:'L15B',shelves:[{id:'sL15B_1',name:'Top'},{id:'sL15B_2',name:'Middle'},{id:'sL15B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL16',name:'L16',racks:[
+    {id:'rL16A',name:'L16A',shelves:[{id:'sL16A_1',name:'Top'},{id:'sL16A_2',name:'Middle'},{id:'sL16A_3',name:'Bottom'}]},
+    {id:'rL16B',name:'L16B',shelves:[{id:'sL16B_1',name:'Top'},{id:'sL16B_2',name:'Middle'},{id:'sL16B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL17',name:'L17',racks:[
+    {id:'rL17A',name:'L17A',shelves:[{id:'sL17A_1',name:'Top'},{id:'sL17A_2',name:'Middle'},{id:'sL17A_3',name:'Bottom'}]},
+    {id:'rL17B',name:'L17B',shelves:[{id:'sL17B_1',name:'Top'},{id:'sL17B_2',name:'Middle'},{id:'sL17B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL18',name:'L18',racks:[
+    {id:'rL18A',name:'L18A',shelves:[{id:'sL18A_1',name:'Top'},{id:'sL18A_2',name:'Middle'},{id:'sL18A_3',name:'Bottom'}]},
+    {id:'rL18B',name:'L18B',shelves:[{id:'sL18B_1',name:'Top'},{id:'sL18B_2',name:'Middle'},{id:'sL18B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL19',name:'L19',racks:[
+    {id:'rL19A',name:'L19A',shelves:[{id:'sL19A_1',name:'Top'},{id:'sL19A_2',name:'Middle'},{id:'sL19A_3',name:'Bottom'}]},
+    {id:'rL19B',name:'L19B',shelves:[{id:'sL19B_1',name:'Top'},{id:'sL19B_2',name:'Middle'},{id:'sL19B_3',name:'Bottom'}]}
+  ]},
+  {id:'zL20',name:'L20',racks:[
+    {id:'rL20A',name:'L20A',shelves:[{id:'sL20A_1',name:'Top'},{id:'sL20A_2',name:'Middle'},{id:'sL20A_3',name:'Bottom'}]},
+    {id:'rL20B',name:'L20B',shelves:[{id:'sL20B_1',name:'Top'},{id:'sL20B_2',name:'Middle'},{id:'sL20B_3',name:'Bottom'}]}
+  ]},
+  {id:'zZ',name:'Z',isZoneZ:true,racks:[
+    {id:'rZ1',name:'Z1',shelves:[{id:'sZ1',name:'Slot'}]}
+  ]},
+  {id:'zY',name:'#01-22',isZoneZ:true,racks:[
+    {id:'rY1',name:'#01-22',shelves:[{id:'sY1',name:'Slot'}]}
+  ]}
+];
+const SKUS=[
+{code:'51010/15CV',name:'苏东 SOTONG WHOLE 510 10/15 1CTN X 10KGS',color:'#f5a623',minQty:5},
+{code:'51010/15CY',name:'苏东 SOTONG WHOLE 10/15 1CTNX10KGSX',color:'#4ecdc4',minQty:5},
+{code:'51010UPCY',name:'苏东 SOTONG WHOLE 510 10UP 1CTN X 10KGSS',color:'#e74c3c',minQty:5},
+{code:'51015/20CV',name:'苏东 SOTONG WHOLE 510 15/20 1CTNX2PCSX5KGS',color:'#3498db',minQty:5},
+{code:'51015/20NN',name:'苏东 SOTONG WHOLE 510 15/20 1CTNX8PCSX2KGS',color:'#2ecc71',minQty:5},
+{code:'51020/25CV',name:'苏东 SOTONG WHOLE 510 20/25 1CTNX10KGS2K',color:'#9b59b6',minQty:5},
+{code:'51020/25CY',name:'苏东 SOTONG WHOLE 20/25 1CTNX10KGS0K',color:'#e67e22',minQty:5},
+{code:'51025/30CY',name:'苏东 SOTONG WHOLE 25/30 1CTNX10KGS0K',color:'#1abc9c',minQty:5},
+{code:'51025UPHP',name:'苏东 SOTONG WHOLE 510 25UP 1CTNX10KGSS2',color:'#e91e63',minQty:5},
+{code:'51026UPCV',name:'苏东 SOTONG WHOLE 510 26UP 1CTNX10KGSS2',color:'#f39c12',minQty:5},
+{code:'51030UPCY',name:'苏东 SOTONG WHOLE 30UP 1CTNX10KGS0K',color:'#f5a623',minQty:5},
+{code:'5106/8HH',name:'苏东 SOTONG WHOLE 6/8 1CTNX10KGSS0',color:'#4ecdc4',minQty:5},
+{code:'5108/10HH',name:'苏东 SOTONG WHOLE 8/10 1CTNX10KGS0K',color:'#e74c3c',minQty:5},
+{code:'5109/12NN',name:'苏东 SOTONG WHOLE 510 9/12 1CTNX8PCSX2KGSS',color:'#3498db',minQty:5},
+{code:'511(1)NN',name:'去皮苏东 SOTONG WHOLE CLEAN 511(1) 1CTNX8PCSX2KGS',color:'#2ecc71',minQty:5},
+{code:'511(2)NN',name:'去皮苏东 SOTONG WHOLE CLEAN 511(2) 1CTNX8PCSX2KGS',color:'#9b59b6',minQty:5},
+{code:'511(3)NN',name:'去皮苏东 SOTONG WHOLE CLEAN 511(3) 1CTNX8PCSX2KGSS',color:'#e67e22',minQty:5},
+{code:'51110/15CV',name:'去皮苏东 SOTONG WHOLE CLEAN 10/15) 1C',color:'#1abc9c',minQty:5},
+{code:'51115/20CV',name:'去皮苏东 SOTONG WHOLE CLEAN 15/20) 1C',color:'#e91e63',minQty:5},
+{code:'51120/25CV',name:'去皮苏东 SOTONG WHOLE CLEAN 20/25) 1C',color:'#f39c12',minQty:5},
+{code:'51120UPCV',name:'去皮苏东 SOTONG WHOLE CLEAN 20UP5) 1',color:'#f5a623',minQty:5},
+{code:'51126UPCV',name:'去皮苏东 SOTONG WHOLE CLEAN 26UP5) 1',color:'#4ecdc4',minQty:5},
+{code:'610RSONN',name:'青目圈 SOFT CUTTLEFISH RING(RED) 1CTNX12KGS2KG',color:'#e74c3c',minQty:5},
+{code:'610SONN',name:'青目圈 SOFT CUTTLEFISH RING 1CTNX8PCSX2KGSS2K',color:'#3498db',minQty:5},
+{code:'6112/300NN',name:'青目 WHOLE CLEAN OVAL SQUID 200/300CS',color:'#2ecc71',minQty:5},
+{code:'611300UPNN',name:'青目 WHOLE CLEAN OVAL SQUID 300UP00',color:'#9b59b6',minQty:5},
+{code:'611CUTCV',name:'青目切 WHOLE CLEAN OVAL SQUID CUT 1CTNX10PCSX1.5K',color:'#e67e22',minQty:5},
+{code:'61212CM',name:'青目肉 WHOLE CLEAN SOFT CUTTLE FISH 12CMUP 1CTNX1',color:'#1abc9c',minQty:5},
+{code:'7102/700NN',name:'目斗 WHOLE CLEAN CUTTLE FISH 200/7002C',color:'#e91e63',minQty:5},
+{code:'7121/300NN',name:'目斗 CLEAN CUTTLEFISH 100/30020',color:'#f39c12',minQty:5},
+{code:'7123/500NN',name:'目斗 CLEAN CUTTLEFISH 300/50020',color:'#f5a623',minQty:5},
+{code:'7125/700NN',name:'目斗 CLEAN CUTTLEFISH 500/70020',color:'#4ecdc4',minQty:5},
+{code:'7127UPNN',name:'目斗 CLEAN CUTTLEFISH 700UP00',color:'#e74c3c',minQty:5},
+{code:'AGL1.5/2.5',name:'红哥里 ANG GO LI / THREADFIN BREAM 1.5/2.5 1',color:'#3498db',minQty:5},
+{code:'AGL3/4',name:'红哥里 THREADFIN BREAM/ ANG GOLI 3/4.5/',color:'#2ecc71',minQty:5},
+{code:'AGLCUT-MU',name:'红哥里切 THREADFIN BREAM CUT/ANGGOLI CUT2.5',color:'#9b59b6',minQty:5},
+{code:'AGLH-LH',name:'红哥里头 THREADFIN BREAM HEAD / ANG GOLI HEAD1CTN',color:'#e67e22',minQty:5},
+{code:'AGLHD-MU',name:'红歌里头 THREADFIN BREAM HEAD/ANGOLI HEADHEAD',color:'#1abc9c',minQty:5},
+{code:'AGLTMU',name:'红哥里尾 THREADFIN BREAM TAIL / ANG GOLI TAIL1CTN',color:'#e91e63',minQty:5},
+{code:'BC10/12HL',name:'竹蚌 BAMBOO CLAMS 10/12TA',color:'#f39c12',minQty:5},
+{code:'BC8/10',name:'竹蚌 BAMBOO CLAMS 8/102T',color:'#f5a623',minQty:5},
+{code:'BC8/10TX',name:'竹蚌 BAMBOO CLAM 8/1002',color:'#4ecdc4',minQty:5},
+{code:'BG300/5000',name:'黑斑 BLACK GROUPER 3000/5000/',color:'#e74c3c',minQty:5},
+{code:'BGF',name:'黑斑肉 BLACK GROUPER FILLET00/',color:'#3498db',minQty:5},
+{code:'BGF300/500',name:'黑斑肉 BLACK GROUPER FILLET 300/500GOL',color:'#2ecc71',minQty:5},
+{code:'BGH',name:'黑斑头 BLACK GROUPER HEADET',color:'#9b59b6',minQty:5},
+{code:'BGP1.3/1.5',name:'黑斑 BLACK GROUPER 1300/1500 CLEANEDLI',color:'#e67e22',minQty:5},
+{code:'BGP2/3KGA',name:'黑斑 BLACK GROUPER 2000/3000 CLEANEDLI',color:'#1abc9c',minQty:5},
+{code:'BGP3/5KLH',name:'黑斑 BLACK GROUPER 3000/5000 CLEANEDLI',color:'#e91e63',minQty:5},
+{code:'BGP5UPMU',name:'黑斑 BLACK GROUPER 5UP0/',color:'#f39c12',minQty:5},
+{code:'BGP6UPMU',name:'黑斑 BLACK GROUPER 6UP0/',color:'#f5a623',minQty:5},
+{code:'BGPF1/2KLH',name:'黑斑肉 BLACK GROUPER FILLET 1000/2000LI',color:'#4ecdc4',minQty:5},
+{code:'BGPF5/1KLH',name:'黑斑肉 BLACK GROUPER FILLET 500/10000LI',color:'#e74c3c',minQty:5},
+{code:'BGT',name:'黑斑尾 BLACK GROUPER TAILET',color:'#3498db',minQty:5},
+{code:'BP1/150',name:'黑昌 BLACK POMFRET 100/150-CLEANED00',color:'#2ecc71',minQty:5},
+{code:'BP1/200LH',name:'黑昌 BLACK POMFRET 100/200-CLEANED00',color:'#9b59b6',minQty:5},
+{code:'BP1/2KLN',name:'黑昌 BLACK POMFRET 100/200-CLEANED00',color:'#e67e22',minQty:5},
+{code:'BP15/20KLN',name:'黑昌 BLACK POMFRET 150/200-CLEANED00',color:'#1abc9c',minQty:5},
+{code:'BP15/20MUC',name:'黑昌 BLACK POMFRET 150/200-CLEANED00',color:'#e91e63',minQty:5},
+{code:'BP15/20NN',name:'黑昌 BLACK POMFRET 150/200-C',color:'#f39c12',minQty:5},
+{code:'BP15/25CV',name:'黑昌 BLACK POMFRET 150/250-C',color:'#f5a623',minQty:5},
+{code:'BP150/200L',name:'黑昌 BLACK POMFRET 150/200-CLEANED00',color:'#4ecdc4',minQty:5},
+{code:'BP2/300CLH',name:'黑昌 BLACK POMFRET 200/300-CLEANED00',color:'#e74c3c',minQty:5},
+{code:'BP2/300NN',name:'黑昌 BLACK POMFRET 200/300-CLEANED00',color:'#3498db',minQty:5},
+{code:'BP2/3CMU',name:'黑昌 BLACK POMFRET 200/300-CLEANED00',color:'#2ecc71',minQty:5},
+{code:'BP2/3KLN',name:'黑昌 BLACK POMFRET 200/300-CLEANED00',color:'#9b59b6',minQty:5},
+{code:'BP24/350C',name:'黑昌 BLACK POMFRET 240/350-CLEANED00',color:'#e67e22',minQty:5},
+{code:'BP25/35CV',name:'黑昌 BLACK POMFRET 250/350-CLEANED00',color:'#1abc9c',minQty:5},
+{code:'BP25/450MU',name:'黑昌 BLACK POMFRET 250/400-CLEANED00',color:'#e91e63',minQty:5},
+{code:'BP3/400NN',name:'黑昌 BLACK POMFRET300/400-CLEANEDD0',color:'#f39c12',minQty:5},
+{code:'BP3/400WNN',name:'黑昌 BLACK POMFRET 300/400CL',color:'#f5a623',minQty:5},
+{code:'BP3/4CMU',name:'黑昌 BLACK POMFRET 300/400-CLEANED00',color:'#4ecdc4',minQty:5},
+{code:'BP3/4KLN',name:'黑昌 BLACK POMFRET 300/400-CLEANED00',color:'#e74c3c',minQty:5},
+{code:'BP3/500',name:'黑昌 BLACK POMFRET 300/500-C',color:'#3498db',minQty:5},
+{code:'BP3/5MUC',name:'黑昌 BLACK POMFRET 300/500-CLEANED00',color:'#2ecc71',minQty:5},
+{code:'BP4/500CLH',name:'黑昌 BLACK POMFRET 400/500-CLEANED00',color:'#9b59b6',minQty:5},
+{code:'BP4/500MU',name:'黑昌 BLACK POMFRET 400/500-C',color:'#e67e22',minQty:5},
+{code:'BP4/600CLH',name:'黑昌 BLACK POMFRET 400/600-CLEANED00',color:'#1abc9c',minQty:5},
+{code:'BP4/600CMU',name:'黑昌 BLACK POMFRET 400/600-CLEANED00',color:'#e91e63',minQty:5},
+{code:'BP4/600WNN',name:'黑昌 BLACK POMFRET 400/600-C',color:'#f39c12',minQty:5},
+{code:'BP4/6MUC',name:'黑昌 BLACK POMFRET 400/600-CLEANED00',color:'#f5a623',minQty:5},
+{code:'BP400/600N',name:'黑昌 BLACK POMFRET 400/600-CLEANED00',color:'#4ecdc4',minQty:5},
+{code:'BP400UPNN',name:'黑昌 BLACK POMFRET 400UP-CLEANEDED',color:'#e74c3c',minQty:5},
+{code:'BP5/600-LH',name:'黑昌 BLACK POMFRET 500/600-CLEANED00',color:'#3498db',minQty:5},
+{code:'BP6/700ME',name:'黑昌 BLACK POMFRET 600/700-C',color:'#2ecc71',minQty:5},
+{code:'BP6/800CLH',name:'黑昌 BLACK POMFRET 600/800-CLEANED00',color:'#9b59b6',minQty:5},
+{code:'BP6/800KLN',name:'黑昌 BLACK POMFRET 600/800-CLEANED00',color:'#e67e22',minQty:5},
+{code:'BP6/800MUC',name:'黑昌 BLACK POMFRET 600/800-CLEANED00',color:'#1abc9c',minQty:5},
+{code:'BP600UPAB',name:'黑昌 BLACK POMFRET 600UP (AB)EA',color:'#f39c12',minQty:5},
+{code:'BP600UPNN',name:'黑昌 BLACK POMFRET 600UP-CLEANEDED',color:'#f5a623',minQty:5},
+{code:'BP7/800ME',name:'黑昌 BLACK POMFRET 700/800LE',color:'#4ecdc4',minQty:5},
+{code:'BP800UC-LH',name:'黑昌 BLACK POMFRET 800UP-CLEANEDED',color:'#e74c3c',minQty:5},
+{code:'BPC',name:'黑昌切 BLACK POMFRET CUTP-C',color:'#3498db',minQty:5},
+{code:'BS10/15',name:'苏东 SOTONG-CS 10/15CU',color:'#2ecc71',minQty:5},
+{code:'BS2/3',name:'苏东仔 BABY SOTONG 2-3UTP',color:'#9b59b6',minQty:5},
+{code:'BS6/8',name:'苏东仔 BABY SOTONG 6/8-CLEANEDNED',color:'#e67e22',minQty:5},
+{code:'BS8/10',name:'苏东 SOTONG-CS8/106/',color:'#1abc9c',minQty:5},
+{code:'BSBAMU',name:'苏东仔 BABY SQUID (BA) 1-2INCHNED',color:'#f39c12',minQty:5},
+{code:'BSCS6/8',name:'苏东 SOTONG-CS 6/8BA',color:'#f5a623',minQty:5},
+{code:'BSCY',name:'苏东仔 BABY SOTONG 1CTNX20PCSX0.4KGSLI',color:'#4ecdc4',minQty:5},
+{code:'BSME',name:'苏东仔 BABY SOTONGKGS',color:'#e74c3c',minQty:5},
+{code:'BTC4/50HLO',name:'熟虾 BLACK TIGER COOKED PRAWN 41/50SL',color:'#3498db',minQty:5},
+{code:'BTHO16/20',name:'虎虾 BLACK TIGER BTH/O 16/20N',color:'#2ecc71',minQty:5},
+{code:'BTHO21-JC',name:'老虎虾 BLACK TIGER HOSO SEMI IQF 21/25I T',color:'#9b59b6',minQty:5},
+{code:'BTHO21-KL',name:'老虎虾 BLACK TIGER HOSO SEMI IQF 21/25I T',color:'#e67e22',minQty:5},
+{code:'CFF3/500LH',name:'目斗肉 CUTTLE FISH FILLET 300/50021/',color:'#1abc9c',minQty:5},
+{code:'CFF5/700LH',name:'目斗肉 CUTTLE FISH FILLET 500/70021/',color:'#e91e63',minQty:5},
+{code:'CFF700UP',name:'目斗肉 CUTTLE FISH FILLET 700UP002',color:'#f39c12',minQty:5},
+{code:'CFFIN-CV',name:'目斗墨 CUTTLE FISH INKLET',color:'#f5a623',minQty:5},
+{code:'CFFIN-NN',name:'目斗墨 CUTTLE FISH INKLET',color:'#4ecdc4',minQty:5},
+{code:'CFHNN',name:'目斗头 CUTTLE FISH HEADET',color:'#e74c3c',minQty:5},
+{code:'CFW150HH',name:'目斗 CUTTLEFISH WHOLE CLEAN (F) 150/200TA',color:'#3498db',minQty:5},
+{code:'CFW1UPHH',name:'目斗 CUTTLEFISH WHOLE CLEAN (F) 1000UP0T',color:'#2ecc71',minQty:5},
+{code:'CFW200HH',name:'目斗 CUTTLEFISH WHOLE CLEAN (F) 200/300TA',color:'#9b59b6',minQty:5},
+{code:'CFW300HH',name:'目斗 CUTTLEFISH WHOLE CLEAN (F) 300/500TA',color:'#e67e22',minQty:5},
+{code:'CFW50HH',name:'目斗 CUTTLEFISH WHOLE CLEAN (F) 50/8000',color:'#1abc9c',minQty:5},
+{code:'CFW700HH',name:'目斗 CUTTLEFISH WHOLE CLEAN (F) 700/1000AI',color:'#e91e63',minQty:5},
+{code:'CFW80HH',name:'目斗 CUTTLEFISH WHOLE CLEAN (F) 80/12000',color:'#f39c12',minQty:5},
+{code:'CK',name:'CHICKEN KARAAGE 1CTNX10PKTX1KG',color:'#f5a623',minQty:5},
+{code:'CMMU3/5',name:'巴都 CHUB MACKEREL 3/5 1CTNX10KGS/1',color:'#4ecdc4',minQty:5},
+{code:'CMMU4/6',name:'巴都 CHUB MACKEREL 4/6 1CTNX10KGS/1',color:'#e74c3c',minQty:5},
+{code:'CMMU4/8',name:'巴都 CHUB MACKEREL 4/8 1CTNX10KGS/1',color:'#3498db',minQty:5},
+{code:'CMMU6/8',name:'巴都 CHUB MACKEREL 6/8 1CTNX10KGS/1',color:'#2ecc71',minQty:5},
+{code:'CP5/6-KP',name:'斗昌 CHINESE POMFRET 500/700X1',color:'#9b59b6',minQty:5},
+{code:'CP6/7-KP',name:'斗昌 CHINESE POMFRET 600/700X1',color:'#e67e22',minQty:5},
+{code:'CP7/8-KP',name:'斗昌 CHINESE POMFRET 700/800X1',color:'#1abc9c',minQty:5},
+{code:'CP8/1-LH',name:'斗昌 CHINESE POMFRET 800/100010',color:'#e91e63',minQty:5},
+{code:'CP8/1PS',name:'斗昌 CHINESE POMFRET 800/100010',color:'#f39c12',minQty:5},
+{code:'CSM',name:'中国日本蜜柑 CHINA SAKURA MIKAN(JAPANBREED)0AIL1C',color:'#f5a623',minQty:5},
+{code:'DELCHG',name:'运输费 DELIVERY CHARGESMIK',color:'#4ecdc4',minQty:5},
+{code:'DORY3/4PS',name:'多利 DORY FILLET 300/400KA',color:'#e74c3c',minQty:5},
+{code:'DRY17/22KL',name:'多利 DORY FILLET 170/220 (6/5)PA',color:'#3498db',minQty:5},
+{code:'FC1/150NN',name:'花蟹 FLOWER CRAB 100/150 (',color:'#2ecc71',minQty:5},
+{code:'FC1/200NN',name:'花蟹 FLOWER CRAB 100/200 1CTNX10KGSED',color:'#9b59b6',minQty:5},
+{code:'FC15/200NN',name:'花蟹 FLOWER CRAB 150/200',color:'#e67e22',minQty:5},
+{code:'FC2/300NN',name:'花蟹 FLOWER CRAB 200/300',color:'#1abc9c',minQty:5},
+{code:'FC300UPNN',name:'花蟹 FLOWER CRAB 300UP00',color:'#e91e63',minQty:5},
+{code:'FCHS',name:'冰鲜海南鲷鱼 CHILLED HAINAN SNAPPER10KGSE',color:'#f39c12',minQty:5},
+{code:'FCNN',name:'花蟹 FLOWER CRAB H',color:'#f5a623',minQty:5},
+{code:'FCNN2/3',name:'花蟹 FLOWER CRAB 200/300SN',color:'#4ecdc4',minQty:5},
+{code:'FCYT2/300',name:'花蟹 FLOWER CRAB 200/300SN',color:'#e74c3c',minQty:5},
+{code:'FG1/200CV',name:'花斑 FLOWER GROUPER 100/200PP',color:'#3498db',minQty:5},
+{code:'FG1/200NN',name:'花斑 FLOWER GROUPER 100/200PP',color:'#2ecc71',minQty:5},
+{code:'FG2/300CV',name:'花斑 FLOWER GROUPER 200/300PP',color:'#9b59b6',minQty:5},
+{code:'FG2/300NN',name:'花斑 FLOWER GROUPER 200/300 1CTNX13KGS0A',color:'#e67e22',minQty:5},
+{code:'FG3/400CV',name:'花斑 FLOWER GROUPER 300/400 1CTNX15KGS0A',color:'#1abc9c',minQty:5},
+{code:'FG3/400NN',name:'花斑 FLOWER GROUPER 300/400 1CTNX13KGS0A',color:'#e91e63',minQty:5},
+{code:'FG3/500CV',name:'花斑 FLOWER GROUPER 300/500 1CTNX15KGS0A',color:'#f39c12',minQty:5},
+{code:'FG4/500NN',name:'花斑 FLOWER GROUPER 400/500',color:'#f5a623',minQty:5},
+{code:'FG4/600CV',name:'花斑 FLOWER GROUPER 400/600 1CTNX15KGS0A',color:'#4ecdc4',minQty:5},
+{code:'FG4/600NN',name:'花斑 FLOWER GROUPER 400/600 1CTNX15KGS0A',color:'#e74c3c',minQty:5},
+{code:'FG5/600NN',name:'花斑 FLOWER GROUPER 500/600',color:'#3498db',minQty:5},
+{code:'FG5/800CV',name:'花斑 FLOWER GROUPER 500/800 1CTNX15KGS0A',color:'#2ecc71',minQty:5},
+{code:'FG6/700CV',name:'花斑 FLOWER GROUPER 600/700 1CTNX15KGS0A',color:'#9b59b6',minQty:5},
+{code:'FG6/700NN',name:'花斑 FLOWER GROUPER 600/700 1CTNX15KGS0A',color:'#e67e22',minQty:5},
+{code:'FG600UPNN',name:'花斑 FLOWER GROUPER 600UP00',color:'#1abc9c',minQty:5},
+{code:'FG7/900CV',name:'花斑 FLOWER GROUPER 7/90000',color:'#e91e63',minQty:5},
+{code:'FG7/900NN',name:'花斑 FLOWER GROUPER 7/90000',color:'#f39c12',minQty:5},
+{code:'FG800UPCV',name:'花斑 FLOWER GROUPER 800UP00',color:'#f5a623',minQty:5},
+{code:'FG9/1.1KNN',name:'花斑 FLOWER GROUPER 900/1100 1',color:'#4ecdc4',minQty:5},
+{code:'FG9/1.2NN',name:'花斑 FLOWER GROUPER 900/1200-CLEANEDKG',color:'#e74c3c',minQty:5},
+{code:'FG9/1.3CV',name:'花斑 FLOWER GROUPER 900/1300-CLEANEDKG',color:'#3498db',minQty:5},
+{code:'FG9/1.3NN',name:'花斑 FLOWER GROUPER 900/1300-CLEANEDKG',color:'#2ecc71',minQty:5},
+{code:'FG9/1000',name:'花斑 FLOWER GROUPER 900/1000-C',color:'#9b59b6',minQty:5},
+{code:'FRHAGL',name:'红哥里 FRESH ANG GOLI900',color:'#e67e22',minQty:5},
+{code:'FRHLOB',name:'龙虾 FRESH LOBSTERLI',color:'#1abc9c',minQty:5},
+{code:'FRHQY',name:'青衣 FRESH GREEN PARROT FISH-C',color:'#e91e63',minQty:5},
+{code:'FRWSQ',name:'苏东 FRESH SOTONG WHOLE 20UP-C',color:'#f39c12',minQty:5},
+{code:'FSB(B)KJS',name:'炸苏东仔 FRIED BABY SOTONG (B)-CLE',color:'#f5a623',minQty:5},
+{code:'FWP16/20HL',name:'淡水虾 FRESH RIVER WATER PRAWN 16/20DKG',color:'#4ecdc4',minQty:5},
+{code:'FWPU10HLY',name:'淡水虾 FRESH RIVER WATER PRAWN U10 1CTNX10KGSTNX',color:'#e74c3c',minQty:5},
+{code:'FWPU15HLY',name:'淡水虾 FRESH WATER PRAWNS U15 1CTNX10KGSX10',color:'#3498db',minQty:5},
+{code:'FWPU3HLY',name:'淡水虾 FRESH RIVER WATER PRAWN U3NX1',color:'#2ecc71',minQty:5},
+{code:'FWPU5HLY',name:'淡水虾 FRESH RIVER WATER PRAWN U5NX1',color:'#9b59b6',minQty:5},
+{code:'FWPU7HLY',name:'淡水虾 FRESH RIVER WATER PRAWN U7 1CTNX10KGSSTN',color:'#e67e22',minQty:5},
+{code:'FZLSB-GC',name:'荔枝虾球 FROZEN LYCHEE SHRIMP BALLS 1CTNX20BAGX2001',color:'#1abc9c',minQty:5},
+{code:'FZSP150-GC',name:'青虾滑 FROZEN SHRIMP PASTE (95%) 1CTNX30BAGx150GM1',color:'#e91e63',minQty:5},
+{code:'FZSP500-GC',name:'青虾滑 FROZEN SHRIMP PASTE (95%) 1CTNX20BAGX500GM1',color:'#f39c12',minQty:5},
+{code:'GGSLH',name:'贡贡 GONG GONG(S)MP',color:'#f5a623',minQty:5},
+{code:'GONG-L',name:'贡贡 GONG GONG(L)MP',color:'#4ecdc4',minQty:5},
+{code:'GONGCV',name:'贡贡 GONG GONG 1CTNX20KGS(9',color:'#e74c3c',minQty:5},
+{code:'GONGLCV',name:'贡贡 GONG GONG (L) 20-40 1CTNX20KGSX2',color:'#3498db',minQty:5},
+{code:'GONGLS',name:'贡贡 GONG GONG 1CTNX15KGS1C',color:'#2ecc71',minQty:5},
+{code:'GONGS-S',name:'贡贡 GONG GONG-S1C',color:'#9b59b6',minQty:5},
+{code:'GONGSCV',name:'贡贡 GONG GONG (S) 40-60 1CTNX20KGSX2',color:'#e67e22',minQty:5},
+{code:'GPC',name:'石斑魚切 GROUPER CUT 40-',color:'#1abc9c',minQty:5},
+{code:'GPH-LH',name:'石斑魚切 GROUPER HEAD40-6',color:'#e91e63',minQty:5},
+{code:'GSKMCUT',name:'红皂切 GOLDEN SNAPPER/ANGZO CUTX20',color:'#f39c12',minQty:5},
+{code:'GSKMF3/5',name:'红皂肉 GOLDEN SNAPPER/ANGZO FILLET 300/500GX5',color:'#f5a623',minQty:5},
+{code:'GSKMF5/7',name:'红皂肉 GOLDEN SNAPPER/ANGZO FILLET 500/700GX5',color:'#4ecdc4',minQty:5},
+{code:'GSKMHL1',name:'无头红皂 GOLDEN SNAPPER HEADLESS-KM(1)0/70',color:'#e74c3c',minQty:5},
+{code:'GSKMHL2',name:'无头红皂 GOLDEN SNAPPER HEADLESS-KM(2)0/70',color:'#3498db',minQty:5},
+{code:'GSKMHL3',name:'无头红皂 GOLDEN SNAPPER HEADLESS-KM(3)0/70',color:'#2ecc71',minQty:5},
+{code:'GSKMHLMU',name:'无头红皂 GOLDEN SNAPPER HEADLESS-KM(3)0',color:'#9b59b6',minQty:5},
+{code:'GSKMHOMU',name:'红皂 GOLDEN SNAPPER -KM HOLE',color:'#e67e22',minQty:5},
+{code:'GW3/5CAI',name:'甘望 INDIAN MACKEREL 3/5 1CTNX10KGS0/',color:'#1abc9c',minQty:5},
+{code:'GW4/6CAI',name:'甘望 INDIAN MACKEREL 4/6 1CTNX10KGS0/',color:'#e91e63',minQty:5},
+{code:'GW4/6MUC',name:'甘望 INDIAN MACKEREL 4/6-CLEANED 1CTNX15KGS00',color:'#f39c12',minQty:5},
+{code:'GW6/8CAI',name:'甘望 INDIAN MACKEREL 6/8 1CTNX10KGSTN',color:'#f5a623',minQty:5},
+{code:'GW6/8CGA',name:'甘望 INDIAN MACKEREL 6/8-CLEANED0K',color:'#4ecdc4',minQty:5},
+{code:'GW6/8CR',name:'甘望 INDIAN MACKEREL 6/8-C',color:'#e74c3c',minQty:5},
+{code:'GW6/8CY',name:'甘望 INDIAN MACKEREL 6/8-C',color:'#3498db',minQty:5},
+{code:'GW6/8MUC',name:'甘望 INDIAN MACKEREL 6/8-CLEANED 1CTNX15KGS00',color:'#2ecc71',minQty:5},
+{code:'GW6/8TX',name:'甘望 INDIAN MACKEREL 6/8-C',color:'#9b59b6',minQty:5},
+{code:'GW8/10CY',name:'甘望 INDIAN MACKEREL 8/10CL',color:'#e67e22',minQty:5},
+{code:'GW8/10MUC',name:'甘望 INDIAN MACKEREL 8/10-CLEANED 1',color:'#1abc9c',minQty:5},
+{code:'GW8/10TX',name:'甘望 INDIAN MACKEREL 8/10 1CTNX10KGSNX',color:'#e91e63',minQty:5},
+{code:'HGMU',name:'老鼠斑 HUMPBACK GROUPER/10',color:'#f39c12',minQty:5},
+{code:'HSA1.5/1.8',name:'刺壳 HILSA 1500/1800ER',color:'#f5a623',minQty:5},
+{code:'HSA1.5/2.0',name:'刺壳 HILSA 1.5/2.000',color:'#4ecdc4',minQty:5},
+{code:'HSA1.8/2KM',name:'刺壳 HILSA 1800/2000ER',color:'#e74c3c',minQty:5},
+{code:'HSA3/5ME',name:'刺壳 HILSA 300/50000',color:'#3498db',minQty:5},
+{code:'HSA5/8ME',name:'刺壳 HILSA 500/80000',color:'#2ecc71',minQty:5},
+{code:'HSA7/1KME',name:'刺壳 HILSA 700/10000E',color:'#9b59b6',minQty:5},
+{code:'HSA8/1KME',name:'刺壳 HILSA 800/10000E',color:'#e67e22',minQty:5},
+{code:'KACIMU',name:'加吉 SWEETLIP(KACI)0E',color:'#1abc9c',minQty:5},
+{code:'KKM2/3LH',name:'红鸡 RED SNAPPER 2/3ER',color:'#e91e63',minQty:5},
+{code:'KKM2/3MU',name:'红鸡 RED SNAPPER 2/3ER',color:'#f39c12',minQty:5},
+{code:'KKM3UPMU',name:'红鸡 RED SNAPPER 3UP H.O0',color:'#f5a623',minQty:5},
+{code:'KKMHL',name:'无头红鸡 RED SNAPPER HEADLESS1CTN',color:'#4ecdc4',minQty:5},
+{code:'KKMHMU',name:'红鸡头 RED SNAPPER HEADDLE',color:'#e74c3c',minQty:5},
+{code:'KKMMU',name:'红鸡 RED SNAPPERR',color:'#3498db',minQty:5},
+{code:'KKMSTLH',name:'红鸡 RED SNAPPER-SAITOU 3KS1',color:'#2ecc71',minQty:5},
+{code:'KKMTMU',name:'红鸡尾 RED SNAPPER TAILU 3',color:'#9b59b6',minQty:5},
+{code:'KUN20/30HH',name:'君令 KUNNING/YELLOW STRIP SCAD FISH 20/30KG',color:'#e67e22',minQty:5},
+{code:'KUN20HH',name:'君令 KUNNING 20LL',color:'#1abc9c',minQty:5},
+{code:'KUN25HH',name:'君令 KUNNING 25LL',color:'#e91e63',minQty:5},
+{code:'KUN25ME',name:'君令 KUNNING 25 1CTNX10KGSCA',color:'#f39c12',minQty:5},
+{code:'KUN30/40',name:'君令 KUNNING 30/40CT',color:'#f5a623',minQty:5},
+{code:'KUN30/40ME',name:'君令 KUNNING 30/40CT',color:'#4ecdc4',minQty:5},
+{code:'KUN30ME',name:'君令 KUNNING 30 1CTNX10KGSCA',color:'#e74c3c',minQty:5},
+{code:'KUN35ME',name:'君令 KUNNING 35 1CTNX10KGSCA',color:'#3498db',minQty:5},
+{code:'KUN40HOLH',name:'君令 KUNNING 40 H.OTN',color:'#2ecc71',minQty:5},
+{code:'KUN40HOME',name:'君令 KUNNING 40 H.OTN',color:'#9b59b6',minQty:5},
+{code:'LALA',name:'啦啦 LA-LA 1CTNX20BAGX0.5KGCA',color:'#e67e22',minQty:5},
+{code:'LJ3/500',name:'竹仔 LEATHER JACKET 300/500CA',color:'#1abc9c',minQty:5},
+{code:'LJ5/700',name:'竹仔 LEATHER JACKET 500/700CA',color:'#e91e63',minQty:5},
+{code:'LJ700UP',name:'竹仔 LEATHER JACKET 700UP00',color:'#f39c12',minQty:5},
+{code:'LJFHL-MU',name:'龙尖 LENTJAN(LC)KE',color:'#f5a623',minQty:5},
+{code:'LOB1/1.5KM',name:'龙虾 LOBSTER 1000/15000U',color:'#4ecdc4',minQty:5},
+{code:'LOB1/1.5KN',name:'龙虾 LOBSTER 1000/15000U',color:'#e74c3c',minQty:5},
+{code:'LOB1/2MU',name:'龙虾 LOBSTER 100/20000',color:'#3498db',minQty:5},
+{code:'LOB1/300NN',name:'龙虾 LOBSTER 100/30000',color:'#2ecc71',minQty:5},
+{code:'LOB2/300LH',name:'龙虾 LOBSTER 200/30000',color:'#9b59b6',minQty:5},
+{code:'LOB2/300ME',name:'龙虾 LOBSTER 200/30000',color:'#e67e22',minQty:5},
+{code:'LOB2/350MU',name:'龙虾 LOBSTER 200/35000',color:'#1abc9c',minQty:5},
+{code:'LOB3/400LH',name:'龙虾 LOBSTER 300/40000',color:'#e91e63',minQty:5},
+{code:'LOB3/400ME',name:'龙虾 LOBSTER 300/40000',color:'#f39c12',minQty:5},
+{code:'LOB3/500NN',name:'龙虾 LOBSTER 300/50000',color:'#f5a623',minQty:5},
+{code:'LOB3UPMU',name:'龙虾 LOBSTER 300UP00',color:'#4ecdc4',minQty:5},
+{code:'LOB4/500LH',name:'龙虾 LOBSTER 400/50000',color:'#e74c3c',minQty:5},
+{code:'LOB4/500ME',name:'龙虾 LOBSTER 400/50000',color:'#3498db',minQty:5},
+{code:'LOB4/600',name:'龙虾 LOBSTER 400/60000',color:'#2ecc71',minQty:5},
+{code:'LOB4/600MU',name:'龙虾 LOBSTER 400/60000',color:'#9b59b6',minQty:5},
+{code:'LOB5/1.2NN',name:'龙虾 LOBSTER 500/120000',color:'#e67e22',minQty:5},
+{code:'LOB5/1KGNN',name:'龙虾 LOBSTER 500/100000',color:'#1abc9c',minQty:5},
+{code:'LOB5/600ME',name:'龙虾 LOBSTER 500/60000',color:'#e91e63',minQty:5},
+{code:'LOB5/600MU',name:'龙虾 LOBSTER 500/60000',color:'#f39c12',minQty:5},
+{code:'LOB5/600NN',name:'龙虾 LOBSTER 500/60000',color:'#f5a623',minQty:5},
+{code:'LOB5/700NN',name:'龙虾 LOBSTER 500/70000',color:'#4ecdc4',minQty:5},
+{code:'LOB6/700LH',name:'龙虾 LOBSTER 600/70000',color:'#e74c3c',minQty:5},
+{code:'LOB6/800MU',name:'龙虾 LOBSTER 600/80000',color:'#3498db',minQty:5},
+{code:'LOB6/800NN',name:'龙虾 LOBSTER 600/80000',color:'#2ecc71',minQty:5},
+{code:'LOB8/1KGNN',name:'龙虾 LOBSTER 800/100000',color:'#9b59b6',minQty:5},
+{code:'LOB8/1KMU',name:'龙虾 LOBSTER 800/100000',color:'#e67e22',minQty:5},
+{code:'LOBCLL',name:'龙虾 LOBSTER C (300/399gm)0C',color:'#1abc9c',minQty:5},
+{code:'LOBDLL',name:'龙虾 LOBSTER D (Below 300gm)AD',color:'#e91e63',minQty:5},
+{code:'LOBMU',name:'龙虾 LOBSTER D',color:'#f39c12',minQty:5},
+{code:'LOBNN',name:'龙虾 LOBSTER D',color:'#f5a623',minQty:5},
+{code:'MKBKC-MU',name:'马鲛 MACKEREL BK-CLEANED0g',color:'#4ecdc4',minQty:5},
+{code:'MKBKHL1',name:'无头马鲛 MACKEREL HEADLESS-BK1AD F',color:'#e74c3c',minQty:5},
+{code:'MKBKHL2',name:'无头马鲛 MACKEREL HEADLESS-BK2AD F',color:'#3498db',minQty:5},
+{code:'MKBKHL3',name:'无头马鲛 MACKEREL HEADLESS-BK3AD F',color:'#2ecc71',minQty:5},
+{code:'MKBKHL4',name:'无头马鲛 MACKEREL HEADLESS-BK4AD F',color:'#9b59b6',minQty:5},
+{code:'OCTBABYHH',name:'八爪鱼仔 BABY OCTOPUSDLES',color:'#e67e22',minQty:5},
+{code:'OTP',name:'八爪鱼仔 BABY OCTOPUSDLES',color:'#1abc9c',minQty:5},
+{code:'OTP1/200CV',name:'八爪鱼 OCTOPUS 100/200ESS',color:'#e91e63',minQty:5},
+{code:'OTP1/200NN',name:'八爪鱼 OCTOPUS 100/200ESS',color:'#f39c12',minQty:5},
+{code:'OTP2/300CV',name:'八爪鱼 OCTOPUS 200/300ESS',color:'#f5a623',minQty:5},
+{code:'OTP2/300NN',name:'八爪鱼 OCTOPUS 200/300ESS',color:'#4ecdc4',minQty:5},
+{code:'OTP3/400CV',name:'八爪鱼 OCTOPUS 300/400ESS',color:'#e74c3c',minQty:5},
+{code:'OTP3/400NN',name:'八爪鱼 OCTOPUS 300/400ESS',color:'#3498db',minQty:5},
+{code:'OTP4/500CV',name:'八爪鱼 OCTOPUS 400/500ESS',color:'#2ecc71',minQty:5},
+{code:'OTP4/500NN',name:'八爪鱼 OCTOPUS 400/500ESS',color:'#9b59b6',minQty:5},
+{code:'OTP500UPCV',name:'八爪鱼 OCTOPUS 500UP00E',color:'#e67e22',minQty:5},
+{code:'OTP500UPNN',name:'八爪鱼 OCTOPUS 500UP00E',color:'#1abc9c',minQty:5},
+{code:'OTP5010CV',name:'八爪鱼 OCTOPUS 50/1000ES',color:'#e91e63',minQty:5},
+{code:'OTPC',name:'八爪鱼仔-切 BABY OCTOPUS CUTBK4AD',color:'#f39c12',minQty:5},
+{code:'OTPK-NN',name:'八爪鱼 OCTOPUS-KCTO',color:'#f5a623',minQty:5},
+{code:'PFF1/2KG',name:'英戈肉 PARROT FILLET 1000/2000D F',color:'#4ecdc4',minQty:5},
+{code:'PFF1/300CV',name:'英戈肉 PARROT FISH FILLET 100/300ISH',color:'#e74c3c',minQty:5},
+{code:'PFF2/300',name:'去皮英戈肉 PARROT FISH FILLET SKINLESS 200/300S00GM',color:'#3498db',minQty:5},
+{code:'PFF3/500CV',name:'英戈肉 PARROT FISH FILLET 300/500ESS',color:'#2ecc71',minQty:5},
+{code:'PFF300/500',name:'英戈肉 PARROT FILLET 300/5000/5',color:'#9b59b6',minQty:5},
+{code:'PFF5/1000C',name:'英戈肉 PARROT FILLET 500/1000/50',color:'#e67e22',minQty:5},
+{code:'PFF500/100',name:'英戈肉 PARROT FILLET 500/1000/50',color:'#1abc9c',minQty:5},
+{code:'PFFB',name:'去皮英戈肉大 PARROT FILLET BIG-SKINLESS 200/3',color:'#e91e63',minQty:5},
+{code:'PFFO1/2',name:'去皮英戈肉 PARROT FISH FILLET 1000/2000 -SKINLESSM1',color:'#f39c12',minQty:5},
+{code:'PFFO2UPNN',name:'去皮英戈肉 PARROT FISH FILLET SKINLESS 2000UPNLESS',color:'#f5a623',minQty:5},
+{code:'PHMK',name:'红脚虾头 RED LEG PRAWN HEADT SK',color:'#4ecdc4',minQty:5},
+{code:'PHTX',name:'虾头 PRAWN HEADPR',color:'#e74c3c',minQty:5},
+{code:'PJC',name:'冲鸡切 PINJALO SNAPPER CUTT S',color:'#3498db',minQty:5},
+{code:'QY1/300CV',name:'青衣肉 GREEN PARROT FILLET 100/300 1CTNX15KGSSSM',color:'#2ecc71',minQty:5},
+{code:'QY3/5',name:'青衣肉 GREEN PARROT FISH FILLET 300/500NX1',color:'#9b59b6',minQty:5},
+{code:'QY3/500CV',name:'青衣肉 GREEN PARROT FILLET 300/500 1CTNX15KGSSSM',color:'#e67e22',minQty:5},
+{code:'QY3/500NN',name:'青衣肉 GREEN PARROT FILLET 300/500 1CTNX15KGSSSS',color:'#1abc9c',minQty:5},
+{code:'QY5/7',name:'青衣肉 GREEN PARROT FISH FILLET 500/700X15',color:'#e91e63',minQty:5},
+{code:'QY5/700NN',name:'青衣肉 GREEN PARROT FILLET 500/700 1CTNX15KGSSSS',color:'#f39c12',minQty:5},
+{code:'QY5/800CV',name:'青衣肉 GREEN PARROT FILLET 500/800 1CTNX15KGSSSS',color:'#f5a623',minQty:5},
+{code:'QY700UPNN',name:'青衣肉 GREEN PARROT / KETARAP FILLET 700UP 1CTNX15',color:'#4ecdc4',minQty:5},
+{code:'QY800UPCV',name:'青衣肉 GREEN PARROT / GREEN FISH FILLET 800UP 1CTN',color:'#e74c3c',minQty:5},
+{code:'RFHL-MU',name:'无头带鱼 RIBBON FISH HEADLESSFISH',color:'#3498db',minQty:5},
+{code:'RFHL3/500',name:'无头带鱼 RIBBON FISH HEADLESS 300/500LET',color:'#2ecc71',minQty:5},
+{code:'RFROLLB',name:'带鱼卷 RIBBON FISH ROLL -BSS',color:'#9b59b6',minQty:5},
+{code:'RFROLLS',name:'带鱼卷 RIBBON FISH ROLL - SS 3',color:'#e67e22',minQty:5},
+{code:'RFT2/300NN',name:'海卢肉 RUAN FILLET/COBIA FILLET (1) 1CTNX13KGS1CT',color:'#1abc9c',minQty:5},
+{code:'RFT300UPNN',name:'海卢肉 RUAN FILLET/COBIA FILLET (2) 1CTNX13KGSCTN',color:'#e91e63',minQty:5},
+{code:'RG(B)MU',name:'红斑 RED GROUPER (GRADE B)LL',color:'#f39c12',minQty:5},
+{code:'RG1.2/1.5N',name:'红斑 RED GROUPER 1200/1500LL',color:'#f5a623',minQty:5},
+{code:'RG1.3/1.5N',name:'红斑 RED GROUPER 1300/1500-CLEANED',color:'#4ecdc4',minQty:5},
+{code:'RG1.3UPMU',name:'红斑 RED GROUPER 1.3UP-CLEANEDAN',color:'#e74c3c',minQty:5},
+{code:'RG1.3UPNN',name:'红斑 RED GROUPER 1.3UP-CLEANEDAN',color:'#3498db',minQty:5},
+{code:'RG1.4UPMU',name:'红斑 RED GROUPER 1400KGUPEA',color:'#2ecc71',minQty:5},
+{code:'RG1.5/2.0H',name:'红斑 RED GROUPER 1500/2000 H.OAN',color:'#9b59b6',minQty:5},
+{code:'RG1.5/2.0N',name:'红斑 RED GROUPER 1500/2000-CLEANED',color:'#e67e22',minQty:5},
+{code:'RG1.5/2NN',name:'红斑 RED GROUPER 1500/2000-C',color:'#1abc9c',minQty:5},
+{code:'RG1/1.1NN',name:'红斑 RED GROUPER 1000/1100-C',color:'#e91e63',minQty:5},
+{code:'RG1/1.5MU',name:'红斑 RED GROUPER 1000/1500-C',color:'#f39c12',minQty:5},
+{code:'RG1/1.5NN',name:'红斑 RED GROUPER 1000/1500-C',color:'#f5a623',minQty:5},
+{code:'RG1/2MU',name:'红斑 RED GROUPER 1000/2000-C',color:'#4ecdc4',minQty:5},
+{code:'RG1/300NN',name:'红斑 RED GROUPER 100/30000',color:'#e74c3c',minQty:5},
+{code:'RG1UPBMU',name:'红斑 RED GROUPER 1KGUP-GRADE BAN',color:'#3498db',minQty:5},
+{code:'RG2.5UPMU',name:'红斑 RED GROUPER 2500UPGR',color:'#2ecc71',minQty:5},
+{code:'RG2/3MU',name:'红斑 RED GROUPER 2000/3000DE',color:'#9b59b6',minQty:5},
+{code:'RG2/3N',name:'红斑 RED GROUPER 2000/3000-CLEANED',color:'#e67e22',minQty:5},
+{code:'RG2/400NN',name:'红斑 RED GROUPER 200/40000',color:'#1abc9c',minQty:5},
+{code:'RG2UPHOMU',name:'红斑 RED GROUPER 2000UP H/OCL',color:'#e91e63',minQty:5},
+{code:'RG2UPMUC',name:'红斑 RED GROUPER 2000UP-CLEANEDNE',color:'#f39c12',minQty:5},
+{code:'RG3/5CAI',name:'红斑 RED GROUPER 3000/5000EA',color:'#f5a623',minQty:5},
+{code:'RG4/6NN',name:'红斑 RED GROUPER 400/600-CLEANEDD',color:'#4ecdc4',minQty:5},
+{code:'RG5/600',name:'红斑 RED GROUPER 500/6000-',color:'#e74c3c',minQty:5},
+{code:'RG5/800',name:'红斑 RED GROUPER 500/8000-',color:'#3498db',minQty:5},
+{code:'RG6/800MU',name:'红斑 RED GROUPER 600/8000-',color:'#2ecc71',minQty:5},
+{code:'RG6/800NN',name:'红斑 RED GROUPER 600/8000-',color:'#9b59b6',minQty:5},
+{code:'RG6/900NN',name:'红斑 RED GROUPER 600/9000-',color:'#e67e22',minQty:5},
+{code:'RG7/1.0MU',name:'红斑 RED GROUPER 700/1000-C',color:'#1abc9c',minQty:5},
+{code:'RG7/1.0NN',name:'红斑 RED GROUPER 700/1000-C',color:'#e91e63',minQty:5},
+{code:'RG7/1MU',name:'红斑 RED GROUPER 700/1000-C',color:'#f39c12',minQty:5},
+{code:'RG7/800',name:'红斑 RED GROUPER 700/8000-',color:'#f5a623',minQty:5},
+{code:'RG7/900',name:'红斑 RED GROUPER 700/9000-',color:'#4ecdc4',minQty:5},
+{code:'RG8/1',name:'红斑 RED GROUPER 800/1000-C',color:'#e74c3c',minQty:5},
+{code:'RG8/1.3N',name:'红斑 RED GROUPER 800/1300-C',color:'#3498db',minQty:5},
+{code:'RG9/1.1MU',name:'红斑 RED GROUPER 900/1100-C',color:'#2ecc71',minQty:5},
+{code:'RG9/1.2NN',name:'红斑 RED GROUPER 900/1200-C',color:'#9b59b6',minQty:5},
+{code:'RG9/1.3NN',name:'红斑 RED GROUPER 900/1300-C',color:'#e67e22',minQty:5},
+{code:'RGB4/600NN',name:'红斑-黑 RED GROUPER-BLACK 400/600DD',color:'#1abc9c',minQty:5},
+{code:'RGB6/800MU',name:'红斑-黑 RED GROUPER-BLACK 600/800DD',color:'#e91e63',minQty:5},
+{code:'RGB6/800NN',name:'红斑-黑 RED GROUPER-BLACK 600/800DD',color:'#f39c12',minQty:5},
+{code:'RGB6/900NN',name:'红斑-黑 RED GROUPER-BLACK 600/900DD',color:'#f5a623',minQty:5},
+{code:'RGB8/1.3N',name:'红斑-黑 RED GROUPER-BLACK 800/1300D',color:'#4ecdc4',minQty:5},
+{code:'RGBNN',name:'红斑 RED GROUPER-GRADE B 8',color:'#e74c3c',minQty:5},
+{code:'RGFN-NN',name:'红斑肉 RED GROUPER FILLET SKINLESSD',color:'#3498db',minQty:5},
+{code:'RGHO',name:'红斑 RED GROUPER H.OLL',color:'#2ecc71',minQty:5},
+{code:'RSP4/6NN',name:'记鱼 ROSY SNAPPER/KEE FISH -4/6SS',color:'#9b59b6',minQty:5},
+{code:'RSP6/8NN',name:'记鱼 ROSY SNAPPER/KEE FISH -6/8SS',color:'#e67e22',minQty:5},
+{code:'SB',name:'SEABASS',color:'#1abc9c',minQty:5},
+{code:'SB2/5',name:'金目鲈 BARRAMUNDI/SEABASS 200/500SD',color:'#f39c12',minQty:5},
+{code:'SB3/4',name:'金目鲈 BARRAMUNDI/SEABASS 300/400SD',color:'#f5a623',minQty:5},
+{code:'SB4/6',name:'金目鲈 BARRAMUNDI/SEABASS 400/600SD',color:'#4ecdc4',minQty:5},
+{code:'SB4/6HP',name:'金目鲈 SEABASS WHOLE 400/6000/6',color:'#e74c3c',minQty:5},
+{code:'SB5/7',name:'金目鲈 BARRAMUNDI/SEABASS 500/700SD',color:'#3498db',minQty:5},
+{code:'SB700',name:'金目鲈 BARRAMUNDI/SEABASS 700UP00S',color:'#2ecc71',minQty:5},
+{code:'SB8/1',name:'金目鲈 BARRAMUNDI/SEABASS 800/1000D',color:'#9b59b6',minQty:5},
+{code:'SBASS-MU',name:'尖吻鲈/金目卢 SEA BASS/BARRAMUNDI1000D',color:'#e67e22',minQty:5},
+{code:'SBCHIN-UP',name:'金目卢 下巴 SEA BASS FISH CHINDI100',color:'#1abc9c',minQty:5},
+{code:'SBCOL-FSD',name:'金目卢脖子 SEA BASS COLAR CHIN',color:'#e91e63',minQty:5},
+{code:'SBF-MU',name:'尖吻鲈/金目卢肉 SEA BASS/BARRAMUNDI FILLETCTNX13K',color:'#f39c12',minQty:5},
+{code:'SBSLH',name:'金目鲈 SEABASSA B',color:'#f5a623',minQty:5},
+{code:'SC1LH',name:'海参 SEA CUCUMBER-1/B',color:'#4ecdc4',minQty:5},
+{code:'SCBCT',name:'海参切 SEA CUCUMBER CUT 1CTNX10KGSLET',color:'#e74c3c',minQty:5},
+{code:'SELAR4/6CA',name:'色拉 SELAR4/6UM',color:'#3498db',minQty:5},
+{code:'SELAR4/6MU',name:'色拉 SELAR 4/6MB',color:'#2ecc71',minQty:5},
+{code:'SELAR6/8CA',name:'色拉 SELAR 6/8MB',color:'#9b59b6',minQty:5},
+{code:'SELAR6/8MU',name:'色拉 SELAR 6/8MB',color:'#e67e22',minQty:5},
+{code:'SFCCV',name:'沙肉(粒) SHARK FILLET 1CTNX15KGSGSL',color:'#1abc9c',minQty:5},
+{code:'SFCV',name:'沙肉 SHARK FILLET 1CTNX15KGSKG',color:'#e91e63',minQty:5},
+{code:'SFH',name:'沙肉 SHARK FILLET-H1C',color:'#f39c12',minQty:5},
+{code:'SFP',name:'沙肉 SHARK FILLET-P1C',color:'#f5a623',minQty:5},
+{code:'SL1.5/2CV',name:'虾婆 SLIPPER LOBSTER 150/200SK',color:'#4ecdc4',minQty:5},
+{code:'SL1.5/2NN',name:'虾婆 SLIPPER LOBSTER 150/200 1CTNX12KGSX1',color:'#e74c3c',minQty:5},
+{code:'SL1/150-H',name:'虾婆 SLIPPER LOBSTER 100/150 1CTNX16KGS13',color:'#3498db',minQty:5},
+{code:'SL1/150AGZ',name:'虾婆 SLIPPER LOBSTER 100/150-GLAZING16',color:'#2ecc71',minQty:5},
+{code:'SL1/150CV',name:'虾婆 SLIPPER LOBSTER 100/150-G',color:'#9b59b6',minQty:5},
+{code:'SL1/150GZL',name:'虾婆 SLIPPER LOBSTER 100/150-GLAZING16',color:'#e67e22',minQty:5},
+{code:'SL1/150NN',name:'虾婆 SLIPPER LOBSTER 100/150 1CTNX12KGSS1',color:'#1abc9c',minQty:5},
+{code:'SL15/200GZ',name:'虾婆 SLIPPER LOBSTER 150/200-GLAZING2K',color:'#e91e63',minQty:5},
+{code:'SL200CV',name:'虾婆 SLIPPER LOBSTER 200UP 1CTNX15KGSGS',color:'#f39c12',minQty:5},
+{code:'SL200NN',name:'虾婆 SLIPPER LOBSTER 200UP 1CTNX12KGSGS',color:'#f5a623',minQty:5},
+{code:'SL200UPLHG',name:'虾婆 SLIPPER LOBSTER 200UP-GLAZING2K',color:'#4ecdc4',minQty:5},
+{code:'SL300UPGZ',name:'虾婆 SLIPPER LOBSTER 300UP-GLAZING2K',color:'#e74c3c',minQty:5},
+{code:'SL40/60NN',name:'虾婆 SLIPPER LOBSTER 40/60 1CTNX12KGSGS',color:'#3498db',minQty:5},
+{code:'SL50/100CV',name:'虾婆 SLIPPER LOBSTER 50/100 1CTNX10KGSSS',color:'#2ecc71',minQty:5},
+{code:'SL50/80CV',name:'虾婆 SLIPPER LOBSTER 50/80 1CTNX15KGSSS',color:'#9b59b6',minQty:5},
+{code:'SL60/80S',name:'虾婆 SLIPPER LOBSTER 60/80 1CTNX12KGSSS',color:'#e67e22',minQty:5},
+{code:'SL8/10BBM',name:'虾婆 SLIPPER LOBSTER 80/100 1CTNX8KGSSS',color:'#1abc9c',minQty:5},
+{code:'SL8/10KLN',name:'虾婆 SLIPPER LOBSTER 80/100 1CTNX8KGSSS',color:'#e91e63',minQty:5},
+{code:'SL80/100CV',name:'虾婆 SLIPPER LOBSTER 80/100 1',color:'#f39c12',minQty:5},
+{code:'SL80/100NN',name:'虾婆 SLIPPER LOBSTER 80/100 1CTNX12KGSSS',color:'#f5a623',minQty:5},
+{code:'SLB',name:'虾婆 SLIPPER LOBSTER-GRADE B 1',color:'#4ecdc4',minQty:5},
+{code:'SLG',name:'沙尖 SILLAGO L',color:'#e74c3c',minQty:5},
+{code:'SLG15/25ME',name:'沙尖 SILLAGO 15/25 1CTNX10KGSCT',color:'#3498db',minQty:5},
+{code:'SLG25/40ME',name:'沙尖 SILLAGO 25/40 1CTNX10KGSCT',color:'#2ecc71',minQty:5},
+{code:'SLG5/100K',name:'沙尖 SILLAGO 50/100 1',color:'#9b59b6',minQty:5},
+{code:'SLM-CV',name:'虾婆肉 SLIPPER LOBSTER MEAT0KG',color:'#e67e22',minQty:5},
+{code:'SLM-JFP',name:'虾婆肉 SLIPPER LOBSTER MEAT0KG',color:'#1abc9c',minQty:5},
+{code:'SLMPK-S',name:'虾婆肉 SLIPPER LOBSTER MEAT-PKSCT',color:'#e91e63',minQty:5},
+{code:'SP10/15P/D',name:'深海白虾 SEA PRAWN 10/15 P/D-PKS',color:'#f39c12',minQty:5},
+{code:'SP16/20P/D',name:'深海白虾 SEA PRAWN UD 16/20P/DKSCT',color:'#f5a623',minQty:5},
+{code:'SP21/25B',name:'深海白虾 SEA PRAWN 21/25-B0P/D',color:'#4ecdc4',minQty:5},
+{code:'SP21/25P/D',name:'深海白虾 SEA PRAWN 21/25 P/D/DKS',color:'#e74c3c',minQty:5},
+{code:'SP26/30B',name:'深海白虾 SEA PRAWN 26/30-B/D/D',color:'#3498db',minQty:5},
+{code:'SP26/30P/D',name:'深海白虾 SEA PRAWN 26/30 P/D/DKS',color:'#2ecc71',minQty:5},
+{code:'SP31/35B',name:'深海白虾 SEA PRAWN 31/35-B/D/D',color:'#9b59b6',minQty:5},
+{code:'SP31/35P/D',name:'深海白虾 SEA PRAWN 31/35 P/D/DKS',color:'#e67e22',minQty:5},
+{code:'SP36/40B',name:'深海白虾 SEA PRAWN 36/40-B/D/D',color:'#1abc9c',minQty:5},
+{code:'SP36/40P/D',name:'深海白虾 SEA PRAWN 36/40 P/D/DKS',color:'#e91e63',minQty:5},
+{code:'SP36/40TO',name:'深海白虾 SEA PRAWN 36/40TO/D/D',color:'#f39c12',minQty:5},
+{code:'SP40/50TO',name:'深海白虾 SEA PRAWN 41/45 TOD/DK',color:'#f5a623',minQty:5},
+{code:'SP41/50B',name:'深海白虾 SEA PRAWN 41/50-BOD/D',color:'#4ecdc4',minQty:5},
+{code:'SP41/50P/D',name:'深海白虾 SEA PRAWN 41/50 P/D/DKS',color:'#e74c3c',minQty:5},
+{code:'SP51/60B',name:'深海白虾 SEA PRAWN 51/60BP/D/',color:'#3498db',minQty:5},
+{code:'SP51/60P/D',name:'深海白虾 SEA PRAWN 51/60 P/D/DKS',color:'#2ecc71',minQty:5},
+{code:'SP51/60TO',name:'深海白虾 SEA PRAWN 51/60 TOD/DK',color:'#9b59b6',minQty:5},
+{code:'SP60/80',name:'深海虾 SEA PRAWN 60/800 T',color:'#e67e22',minQty:5},
+{code:'SP61/70PD',name:'深海白虾 SEA PRAWN 61/70 PDD/DK',color:'#1abc9c',minQty:5},
+{code:'SPFR',name:'马鲛鱼蛋 MACKEREL-FISH ROEDD/D',color:'#e91e63',minQty:5},
+{code:'SPH',name:'峇丹头 SPANISH MACKEREL HEADDKS',color:'#f39c12',minQty:5},
+{code:'SPM-A1',name:'峇丹 SPANISH MACKEREL- A1AD',color:'#f5a623',minQty:5},
+{code:'SPM-A2',name:'峇丹 SPANISH MACKEREL- A2AD',color:'#4ecdc4',minQty:5},
+{code:'SPM-B1',name:'峇丹 SPANISH MACKEREL- B1AD',color:'#e74c3c',minQty:5},
+{code:'SPM-B2',name:'峇丹 SPANISH MACKEREL- B2AD',color:'#3498db',minQty:5},
+{code:'SPM1/3KPCV',name:'峇丹 SPANISH MACKEREL 1000/3000 - HOOKSS',color:'#2ecc71',minQty:5},
+{code:'SPM1C',name:'峇丹切 SPANISH MACKEREL CUT-1000',color:'#9b59b6',minQty:5},
+{code:'SPM2/3NN',name:'峇丹 SPANISH MACKEREL 2/3T-',color:'#e67e22',minQty:5},
+{code:'SPM2C',name:'峇丹切大 SPANISH MACKEREL CUT-200 -',color:'#1abc9c',minQty:5},
+{code:'SPM3/5NN',name:'峇丹 SPANISH MACKEREL 3/5UT',color:'#e91e63',minQty:5},
+{code:'SPM3KUPPCV',name:'峇丹 SPANISH MACKEREL 3000UP - HOOKOO',color:'#f39c12',minQty:5},
+{code:'SPM5/7NN',name:'峇丹 SPANISH MACKEREL 5/70U',color:'#f5a623',minQty:5},
+{code:'SPM7UPNN',name:'峇丹 SPANISH MACKEREL 7UP0U',color:'#4ecdc4',minQty:5},
+{code:'SPMCORAL',name:'峇丹鄂肉 SPANISH MACKEREL CORAL- HO',color:'#e74c3c',minQty:5},
+{code:'SPMCTBBMU',name:'峇丹切 SPANISH MACKEREL TBB CUTHOO',color:'#3498db',minQty:5},
+{code:'SPMF-DK',name:'峇丹刮肉 MACKEREL FILLET-DKBB C',color:'#2ecc71',minQty:5},
+{code:'SPMF-MUDT',name:'马鲛肉 MACKEREL FILLET-DTKBB',color:'#9b59b6',minQty:5},
+{code:'SPMFAAMU',name:'峇丹肉 SPANISH MACKEREL FILLET-AABAKOOK',color:'#e67e22',minQty:5},
+{code:'SPMFBAKMU',name:'峇丹肉 MACKEREL FILLET-BAKLLE',color:'#1abc9c',minQty:5},
+{code:'SPMFNN',name:'峇丹肉 SPANISH MACKEREL FILLET-AA',color:'#e91e63',minQty:5},
+{code:'SPPUH2MU',name:'板鲛 SPANISH MACKEREL (PU) HEADLESS 2KS',color:'#f39c12',minQty:5},
+{code:'SPPUH3MU',name:'板鲛 SPANISH MACKEREL (PU) HEADLESS 3KS',color:'#f5a623',minQty:5},
+{code:'SPPUH3MUC',name:'板鲛切 SPANISH MACKEREL (PU) HEADLESS CUT 33KG',color:'#4ecdc4',minQty:5},
+{code:'SPTBAHL',name:'峇丹 SPANISH MACKEREL-TBAHL H',color:'#e74c3c',minQty:5},
+{code:'SPTBAHO',name:'峇丹 SPANISH MACKEREL-TBA HOHE',color:'#3498db',minQty:5},
+{code:'SPTBB1CV',name:'峇丹 SPANISH MACKEREL TBB1HO',color:'#2ecc71',minQty:5},
+{code:'SPTBB2',name:'峇丹切 SPANISH MACKEREL CUT -TBB(2)SS',color:'#9b59b6',minQty:5},
+{code:'SPTBB2CV',name:'峇丹 SPANISH MACKEREL TBB2 -',color:'#e67e22',minQty:5},
+{code:'SPTBB2MU',name:'峇丹 SPANISH MACKEREL TBB2 -',color:'#1abc9c',minQty:5},
+{code:'SPTBB3',name:'峇丹切 SPANISH MACKEREL CUT -TBB(3)SS',color:'#e91e63',minQty:5},
+{code:'SPTBB3CV',name:'峇丹 SPANISH MACKEREL HEADLESS-33)',color:'#f39c12',minQty:5},
+{code:'SPTBB3MU',name:'峇丹 SPANISH MACKEREL TBB3LE',color:'#f5a623',minQty:5},
+{code:'SPTBBMU',name:'无头峇丹 SPANISH MACKEREL-TBBESS-',color:'#4ecdc4',minQty:5},
+{code:'SQ0UPHH',name:'苏东 SOTONG 10UP 1CTNX10KGSSS',color:'#e74c3c',minQty:5},
+{code:'SQ10/15',name:'苏东 SOTONG 10/15 1',color:'#3498db',minQty:5},
+{code:'SQ10UP',name:'苏东 SOTONG 10UP5',color:'#2ecc71',minQty:5},
+{code:'SQ15/20',name:'苏东仔 SOTONG 15/201CT',color:'#9b59b6',minQty:5},
+{code:'SQ3/6AA',name:'苏东 SOTONG 3/6AA01',color:'#e67e22',minQty:5},
+{code:'SQ6/8HH',name:'苏东 SOTONG 6/8AA',color:'#1abc9c',minQty:5},
+{code:'SQ8/10HH',name:'苏东 SOTONG 8/10A0',color:'#e91e63',minQty:5},
+{code:'SQB12NN',name:'苏东肉切 SOTONG CUT (BODY ONLY)S-33',color:'#f39c12',minQty:5},
+{code:'SQBSO12NN',name:'无皮苏东身体 SOTONG CUT SKINLESS (BODY ONLY) 1CTNCTN',color:'#f5a623',minQty:5},
+{code:'SQBSOR12NN',name:'无皮苏东身体 SOTONG CUT SKINLESS (BODY ONLY)-REDTNCTN',color:'#4ecdc4',minQty:5},
+{code:'SQC12LH',name:'苏东切足 SOTONG CUT-NETKINL',color:'#e74c3c',minQty:5},
+{code:'SQC15/20',name:'苏东 SOTONG 15/20-N',color:'#3498db',minQty:5},
+{code:'SQC16LH',name:'苏东切 SOTONG CUT 1CTNX16KGS (B',color:'#2ecc71',minQty:5},
+{code:'SQC16NN',name:'苏东切 SOTONG CUT 1CTN X 16KGSBOD',color:'#9b59b6',minQty:5},
+{code:'SQC20/25',name:'苏东 SOTONG 20/25 1',color:'#e67e22',minQty:5},
+{code:'SQC20/25LH',name:'苏东 SOTONG 20/25-CLEANED16',color:'#1abc9c',minQty:5},
+{code:'SQC20CV',name:'苏东切 SOTONG CUT 1CTN X 20KGSBOD',color:'#e91e63',minQty:5},
+{code:'SQC20LH',name:'苏东切 SOTONG CUT 1CTNX20KGSGSB',color:'#f39c12',minQty:5},
+{code:'SQC25/30',name:'苏东 SOTONG 25/30 1',color:'#f5a623',minQty:5},
+{code:'SQC5/7',name:'苏东仔 BABY SOTONG 5/7-CLEANEDSBO',color:'#4ecdc4',minQty:5},
+{code:'SQC5/7LH',name:'苏东仔 BABY SOTONG 5/7-CLEANEDSBO',color:'#e74c3c',minQty:5},
+{code:'SQCBH16NN',name:'苏东切 SOTONG CUT 1CTN X 12PCS X 16KGSY)-',color:'#3498db',minQty:5},
+{code:'SQCC16NN',name:'无皮苏东切 SOTONG CUT SKINLESS 1CTN X 16KGSREDTN',color:'#2ecc71',minQty:5},
+{code:'SQCS10/13',name:'苏东 SOTONG-CS 10/13KI',color:'#9b59b6',minQty:5},
+{code:'SQCS13/15',name:'苏东 SOTONG-CS 13/15KI',color:'#e67e22',minQty:5},
+{code:'SQF',name:'苏东花 SQUID FLOWER15K',color:'#1abc9c',minQty:5},
+{code:'SQH',name:'SOTONG HEAD',color:'#e91e63',minQty:5},
+{code:'SQH12NN',name:'苏东头 SOTONG CUT (HEAD ONLY) 1C',color:'#f39c12',minQty:5},
+{code:'SQHSO12NN',name:'无皮苏东头 SOTONG CUT SKINLESS (HEAD ONLY) 1CTNX1TN',color:'#f5a623',minQty:5},
+{code:'SQHSOR12NN',name:'无皮苏东头 SOTONG CUT SKINLESS (HEAD ONLY)-RED 1CTN',color:'#4ecdc4',minQty:5},
+{code:'SQU3AA',name:'苏东 SOTONG U3AA 1CTNX10KGS(H',color:'#e74c3c',minQty:5},
+{code:'SR1/1.5KLN',name:'方鱼 STINGRAY 1000/1500 1CTNX9KGSON',color:'#3498db',minQty:5},
+{code:'SR1/2BGA',name:'扁方鱼 STINGRAY 1000/2000-THINX9K',color:'#2ecc71',minQty:5},
+{code:'SR1/2KGA',name:'方鱼 STING RAY 1000/2000 1CTNX10KGSY)',color:'#9b59b6',minQty:5},
+{code:'SR1/2KHH',name:'方鱼 STINGRAY 1000/20000',color:'#e67e22',minQty:5},
+{code:'SR2/300GA',name:'方鱼 STING RAY 200/300 1CTNX10KGSGS',color:'#1abc9c',minQty:5},
+{code:'SR2BGA',name:'扁方鱼 STINGRAY 2000UP-THINCTN',color:'#e91e63',minQty:5},
+{code:'SR2KUPGA',name:'方鱼 STING RAY 2000UP 1CTNX10KGSSG',color:'#f39c12',minQty:5},
+{code:'SR3/500GA',name:'方鱼 STINGRAY 300/500 1CTNX10KGSSS',color:'#f5a623',minQty:5},
+{code:'SR3/5KLN',name:'方鱼 STINGRAY 300/500 1CTNX9KGSSS',color:'#4ecdc4',minQty:5},
+{code:'SR5/1000GA',name:'方鱼 STINGRAY 500/1000 1CTNX10KGSGS',color:'#e74c3c',minQty:5},
+{code:'SR5/10KLN',name:'方鱼 STINGRAY 500/1000 1CTNX10KGSSG',color:'#3498db',minQty:5},
+{code:'SR5/1BGA',name:'扁方鱼 STINGRAY 500/1000-THINX10',color:'#2ecc71',minQty:5},
+{code:'SR5/700HH',name:'方鱼 STINGRAY 500/7000-',color:'#9b59b6',minQty:5},
+{code:'SRC1/2',name:'方鱼切 STINGRAY 1000/2000 CUTX10',color:'#e67e22',minQty:5},
+{code:'SSC100/150',name:'软壳蟹 SOFT SHELL CRAB 100/15010K',color:'#1abc9c',minQty:5},
+{code:'SSC80/100',name:'软壳蟹 SOFT SHELL CRAB 80/100010',color:'#e91e63',minQty:5},
+{code:'SWG',name:'燕尾斑 LUNAR TAIL GROUPER/10',color:'#f39c12',minQty:5},
+{code:'TBH1/2NN',name:'无头峇丹 SPANISH MACKEREL HEADLESS 1/2SY)-',color:'#f5a623',minQty:5},
+{code:'TBH2/3NN',name:'无头峇丹 SPANISH MACKEREL HEADLESS 2/3SY)-',color:'#4ecdc4',minQty:5},
+{code:'TBH3/5NN',name:'无头峇丹 SPANISH MACKEREL HEADLESS 3/5SY)-',color:'#e74c3c',minQty:5},
+{code:'TG',name:'老虎斑 TIGER GROUPER 1/3 HE',color:'#3498db',minQty:5},
+{code:'TGMC3UP',name:'虎斑 TIGER GROUPER 3UP3',color:'#2ecc71',minQty:5},
+{code:'TGMF',name:'虎斑肉 TIGER GROUPER FILLETADL',color:'#9b59b6',minQty:5},
+{code:'TMS20',name:'生鱼片 TOMAN SLICES(M) 1CTNX20PCSX0.5KGSRED',color:'#e67e22',minQty:5},
+{code:'TMSLH',name:'生鱼片 TOMAN SLICES-M 1CTNX10KGSX0.',color:'#1abc9c',minQty:5},
+{code:'TMSPS',name:'生鱼片 TOMAN SLICES-M 1CTNX10KGSX0.',color:'#e91e63',minQty:5},
+{code:'VHO16-KL',name:'南美虾 VANNAMEI PDTO IQF 16/200KG',color:'#f39c12',minQty:5},
+{code:'VHO21-JCS',name:'南美虾 VANNAMEI HOSO SEMI IQF 21/250.5',color:'#f5a623',minQty:5},
+{code:'VPD1/200JC',name:'虾仁 VANNAMEI PD IQF 100/200 2',color:'#4ecdc4',minQty:5},
+{code:'VPDTO51-JC',name:'南美虾 VANNAMEI PDTO IQF 51/6021/',color:'#e74c3c',minQty:5},
+{code:'VPDTO51-KL',name:'南美虾 VANNAMEI PDTO IQF 51/6021/',color:'#3498db',minQty:5},
+{code:'WF15/200LH',name:'白午 FOUR FINGER THREADFIN 150/2000.',color:'#2ecc71',minQty:5},
+{code:'WF15/300MU',name:'白午 FOUR FINGER THREADFIN 150/3000.',color:'#9b59b6',minQty:5},
+{code:'WF2/300MU',name:'白午 FOUR FINGER THREADFIN 200/3000.',color:'#e67e22',minQty:5},
+{code:'WF3/400LH',name:'白午鱼 FOUR FINGER THREADFIN 300/400-CLEANED 1',color:'#1abc9c',minQty:5},
+{code:'WF7/800LH',name:'白午 FOUR FINGER THREADFIN 700/8000-',color:'#e91e63',minQty:5},
+{code:'WFMU7/100',name:'白午 FOUR FINGER THREADFIN 700/1000-C',color:'#f39c12',minQty:5},
+{code:'WHFC-MU',name:'白午鱼切 FOUR FINGER THREADFIN CUT000-',color:'#f5a623',minQty:5},
+{code:'WHFH-MU',name:'白午鱼头 FOUR FINGER THREADFIN HEAD00-C',color:'#4ecdc4',minQty:5},
+{code:'WHFMU1.5/2',name:'白午 FOUR FINGER THREADFIN 150/200-CLEANEDD',color:'#e74c3c',minQty:5},
+{code:'WHFMU7/100',name:'白午 FOUR FINGER THREADFIN 700/1000-CLEANED',color:'#3498db',minQty:5},
+{code:'WP10/12KLN',name:'红脚虾 WHITE PRAWN 10/12FIN',color:'#2ecc71',minQty:5},
+{code:'WP13/15KLN',name:'红脚 WHITE PRAWN 13/152F',color:'#9b59b6',minQty:5},
+{code:'WP8/10KLN',name:'红脚虾 WHITE PRAWN 8/102FI',color:'#e67e22',minQty:5},
+{code:'YTFM',name:'黄尾肉 YELLOW TAIL FILLET MEAT0/1',color:'#1abc9c',minQty:5},
+{code:'YTFMU',name:'黄尾 YELLOW TAILL',color:'#e91e63',minQty:5},
+{code:'BP4/7CMU',name:'黑昌 BLACK POMFRET 400/700-CLEANED',color:'#8e44ad',minQty:5},
+{code:'BP700UCMU',name:'黑昌 BLACK POMFRET 700UP-CLEANED',color:'#2c3e50',minQty:5},
+{code:'BP3/4KLNGZ',name:'黑昌 BLACK POMFRET 300/400-CLEANED',color:'#c0392b',minQty:5},
+{code:'BP4/5KLNGZ',name:'黑昌 BLACK POMFRET 400/500-CLEANED',color:'#1abc9c',minQty:5},
+{code:'BP15/2CVGZ',name:'黑昌 BLACK POMFRET 150/200-CLEANED',color:'#3498db',minQty:5},
+{code:'BP2/3CVGZ',name:'黑昌 BLACK POMFRET 200/300-CLEANED',color:'#9b59b6',minQty:5},
+{code:'BP2/3KLNGZ',name:'黑昌 BLACK POMFRET 200/300-CLEANED',color:'#34495e',minQty:5},
+{code:'FG300/500CV',name:'花斑 FLOWER GROUPER 300/500',color:'#e91e63',minQty:5},
+{code:'FG300/500NN',name:'花斑 FLOWER GROUPER 300/500',color:'#00bcd4',minQty:5},
+{code:'LJC700/1K',name:'竹仔切 LEATHER JACKET CUT 700/1000',color:'#795548',minQty:5},
+{code:'SR5/700BHH',name:'方鱼(蓝点) STINGRAY 500/700-BLUE SPOT',color:'#ff9800',minQty:5},
+{code:'SR1/2KBHH',name:'方鱼(蓝点) STINGRAY 1000/2000-BLUE SPOT',color:'#4caf50',minQty:5},
+{code:'RFHLMUGZ',name:'无头带鱼-冰 RIBBON FISH HEADLESS GLAZING',color:'#03a9f4',minQty:5},
+{code:'SL1/150NGZ',name:'虾婆-冰 SLIPPER LOBSTER 100/150-GLAZING',color:'#673ab7',minQty:5},
+{code:'SL1.5/2NGZ',name:'虾婆-冰 SLIPPER LOBSTER 150/200-GLAZING',color:'#f44336',minQty:5},
+{code:'SL1/150CGZ',name:'虾婆-冰 SLIPPER LOBSTER 100/150-GLAZING',color:'#009688',minQty:5},
+{code:'SL1.5/2CGZ',name:'虾婆-冰 SLIPPER LOBSTER 150/200-GLAZING',color:'#ff6f00',minQty:5},
+{code:'SPCTBA2MU',name:'岩丹切 SPANISH MACKEREL CUT - TBA(2)',color:'#1565c0',minQty:5},
+{code:'SPCTBB1NN',name:'岩丹切 SPANISH MACKEREL CUT - TBB(1)',color:'#558b2f',minQty:5},
+{code:'SPCTBB2NN',name:'岩丹切 SPANISH MACKEREL CUT - TBB(2)',color:'#6a1b9a',minQty:5},
+{code:'SPCTBB3NN',name:'岩丹切 SPANISH MACKEREL CUT - TBB(3)',color:'#00838f',minQty:5},
+{code:'SPCB1BBM',name:'岩丹切 SPANISH MACKEREL CUT - B1',color:'#bf360c',minQty:5},
+{code:'SPCB2BBM',name:'岩丹切 SPANISH MACKEREL CUT - B2',color:'#37474f',minQty:5},
+{code:'GONGAB-CV',name:'贡贡 GONG GONG - AB',color:'#880e4f',minQty:5},
+{code:'SR3/5KLAB',name:'方鱼 STINGRAY 300/500 - AB',color:'#01579b',minQty:5},
+{code:'SR5/10KLAB',name:'方鱼 STINGRAY 500/1000 - AB',color:'#33691e',minQty:5},
+{code:'SQC16JCP',name:'苏东切 SOTONG CUT',color:'#4a148c',minQty:5}
+];
+// ── STATE ──
+let assignments = {};
+let DYNAMIC_SKUS = null;
+function getAllSKUs() { return DYNAMIC_SKUS !== null ? DYNAMIC_SKUS : SKUS; }
+let warehouseZones = null;
+let history = [];
+let selectedSKU = null;
+let assignShelfId = null;
+let addBatchState = null;
+let moveState = null;
+let dragState = null;
+let currentUser = null;
+let realtimeChannel = null;
+
+// ── UTILS ──
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function fmtDate(s) { if(!s)return'—'; const d=new Date(s+'T00:00:00'); return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtDateTime(s) { if(!s)return'—'; const d=new Date(s); return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function getZones() { return warehouseZones || ZONES; }
+function getSKU(code) { return getAllSKUs().find(s=>s.code===code); }
+function getTotalQty(code) { let t=0; for(const items of Object.values(assignments)){const e=items.find(i=>i.code===code);if(e)e.batches.forEach(b=>t+=(b.qty-(b.jiQty||0)));} return t; }
+function getRawQty(code) { let t=0; for(const items of Object.values(assignments)){const e=items.find(i=>i.code===code);if(e)e.batches.forEach(b=>t+=b.qty);} return t; }
+function getBatchCount(code) { let n=0; for(const items of Object.values(assignments)){const e=items.find(i=>i.code===code);if(e)n+=e.batches.length;} return n; }
+function getShelfLocations(code) { const locs=[]; for(const z of getZones())for(const r of z.racks)for(const s of r.shelves){if((assignments[s.id]||[]).some(i=>i.code===code))locs.push(r.name+(s.name!=='Slot'?'-'+s.name:''));} return locs; }
+function findShelfById(id) { for(const z of getZones())for(const r of z.racks){const s=r.shelves.find(s=>s.id===id);if(s)return{z,r,s};} return null; }
+function findRackById(id) { for(const z of getZones()){const r=z.racks.find(r=>r.id===id);if(r)return{z,r};} return null; }
+function shelfLabel(shelfId) { const found=findShelfById(shelfId); if(!found)return shelfId; return found.r.name+(found.s.name!=='Slot'?' – '+found.s.name:''); }
+
+// ── TOAST / SYNC ──
+function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.className='toast',3000);}
+function setSyncState(state){const d=document.getElementById('syncDot');if(!d)return;d.className='sync-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');}
+
+// ── AUTH ──
+async function doLogin() {
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const errEl=document.getElementById('loginErr');
+  const loadEl=document.getElementById('loginLoading');
+  if(!email||!pass){errEl.textContent='请输入邮箱和密码。 | Please enter email and password.';errEl.style.display='block';return;}
+  errEl.style.display='none';loadEl.style.display='block';
+  try {
+    const res=await sb.auth.signInWithPassword({email,password:pass});
+    loadEl.style.display='none';
+    if(res.error){errEl.textContent='Login failed: '+res.error.message;errEl.style.display='block';return;}
+    currentUser=res.data.user; bootApp();
+  } catch(e){loadEl.style.display='none';errEl.textContent='Error: '+e.message;errEl.style.display='block';}
+}
+async function doLogout() {
+  await sb.auth.signOut();
+  if(realtimeChannel)sb.removeChannel(realtimeChannel);
+  document.getElementById('appShell').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  assignments={};selectedSKU=null;currentUser=null;history=[];
+}
+document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginPass').focus();});
+document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+(async function(){try{const r=await sb.auth.getSession();if(r.data&&r.data.session){currentUser=r.data.session.user;bootApp();}}catch(e){}})();
+
+// ── BOOT ──
+async function bootApp() {
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appShell').style.display='block';
+  document.getElementById('loadingOverlay').style.display='flex';
+  document.getElementById('userEmail').textContent=currentUser.email;
+  await loadSKUs();
+  await loadStructure();
+  await loadAssignments();
+  await loadHistory();
+  document.getElementById('loadingOverlay').style.display='none';
+  setupRealtime();
+  render();
+}
+
+// ── SKU MANAGEMENT ──
+async function loadSKUs() {
+  const res=await sb.from('skus').select('*').order('code');
+  if(res.error||!res.data||res.data.length===0){DYNAMIC_SKUS=null;return;}
+  const dbMap={};
+  res.data.forEach(r=>{if(r.name!=='__DELETED__')dbMap[r.code]={code:r.code,name:r.name,color:r.color||'#888888',minQty:5};else dbMap[r.code]=null;});
+  const merged=SKUS.filter(s=>dbMap[s.code]!==null&&!dbMap[s.code]).concat(Object.values(dbMap).filter(Boolean));
+  merged.sort((a,b)=>a.code.localeCompare(b.code));
+  DYNAMIC_SKUS=merged;
+}
+
+function openSKUManager() {
+  document.getElementById('newSkuCode').value='';
+  document.getElementById('newSkuName').value='';
+  document.getElementById('newSkuColor').value='#1a6fc4';
+  renderSKUManagerList();
+  document.getElementById('skuManagerPanel').style.display='flex';
+}
+function closeSKUManager(){document.getElementById('skuManagerPanel').style.display='none';}
+
+function renderSKUManagerList() {
+  const skus=getAllSKUs();
+  const q=(document.getElementById('skuMgrFilter')||{value:''}).value.toUpperCase();
+  const filtered=skus.filter(s=>!q||s.code.includes(q)||s.name.toUpperCase().includes(q));
+  let html='';
+  for(const s of filtered){
+    html+='<div class="sku-mgr-row">';
+    html+='<div style="width:14px;height:14px;border-radius:50%;background:'+s.color+';flex-shrink:0;"></div>';
+    html+='<div style="flex:1;min-width:0;overflow:hidden;"><div style="font-family:DM Mono,monospace;font-size:.75rem;font-weight:700;color:#1a6fc4;">'+escH(s.code)+'</div>';
+    html+='<div style="font-size:.7rem;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escH(s.name)+'</div></div>';
+    html+='<button class="row-act" data-code="'+escH(s.code)+'" onclick="openEditSKU(this.dataset.code)" title="Edit">✏️</button>';
+    html+='<button class="row-act del" data-code="'+escH(s.code)+'" onclick="deleteSKU(this.dataset.code)" title="Delete">✕</button>';
+    html+='</div>';
+  }
+  document.getElementById('skuMgrList').innerHTML=html||'<div class="no-result">No SKUs found</div>';
+  document.getElementById('skuMgrCount').textContent=skus.length+' 种商品 SKUs';
+}
+
+async function addSKU() {
+  const code=document.getElementById('newSkuCode').value.trim().toUpperCase();
+  const name=document.getElementById('newSkuName').value.trim();
+  const color=document.getElementById('newSkuColor').value;
+  if(!code){alert('Enter SKU code.');return;}
+  if(!name){alert('Enter SKU name.');return;}
+  if(getAllSKUs().find(s=>s.code===code)){alert('SKU '+code+' already exists!');return;}
+  const res=await sb.from('skus').upsert({code,name,color});
+  if(res.error){toast('Failed: '+res.error.message,'err');return;}
+  await loadSKUs();
+  document.getElementById('newSkuCode').value='';
+  document.getElementById('newSkuName').value='';
+  document.getElementById('newSkuColor').value='#1a6fc4';
+  renderSKUManagerList();render();
+  toast('✅ 商品 '+code+' 已添加！added!');
+}
+
+function openEditSKU(code) {
+  const s=getSKU(code);if(!s)return;
+  document.getElementById('editSkuCodeLbl').textContent=s.code;
+  document.getElementById('editSkuCodeHidden').value=s.code;
+  document.getElementById('editSkuName').value=s.name;
+  document.getElementById('editSkuColor').value=s.color||'#888888';
+  document.getElementById('editSkuPanel').style.display='flex';
+}
+function closeEditSKU(){document.getElementById('editSkuPanel').style.display='none';}
+
+async function saveEditSKU() {
+  const code=document.getElementById('editSkuCodeHidden').value;
+  const name=document.getElementById('editSkuName').value.trim();
+  const color=document.getElementById('editSkuColor').value;
+  if(!name){alert('Enter SKU name.');return;}
+  const res=await sb.from('skus').upsert({code,name,color});
+  if(res.error){toast('Failed: '+res.error.message,'err');return;}
+  await loadSKUs();closeEditSKU();renderSKUManagerList();render();
+  toast('✅ '+code+' 已更新！updated!');
+}
+
+async function deleteSKU(code) {
+  const hasStock=getTotalQty(code)>0;
+  const msg=hasStock?'⚠️ '+code+' has stock! Delete SKU anyway?':'Delete SKU '+code+'?';
+  if(!confirm(msg))return;
+  await sb.from('skus').upsert({code,name:'__DELETED__',color:'#cccccc',deleted:true});
+  await loadSKUs();renderSKUManagerList();render();
+  toast('🗑 商品 SKU '+code+' 已删除 deleted');
+}
+
+// ── STRUCTURE ──
+async function loadStructure() {
+  const res=await sb.from('warehouse_structure').select('*').eq('id','zones').single();
+  if(res.data&&res.data.data){warehouseZones=res.data.data;}
+  else{warehouseZones=JSON.parse(JSON.stringify(ZONES));await saveStructure();}
+}
+async function saveStructure() {
+  await sb.from('warehouse_structure').upsert({id:'zones',data:warehouseZones,updated_at:new Date().toISOString()});
+}
+
+// ── DATABASE ──
+async function loadAssignments() {
+  setSyncState('syncing');
+  const res=await sb.from('assignments').select('*');
+  if(res.error){setSyncState('error');toast('Load failed: '+res.error.message,'err');return;}
+  assignments={};
+  for(const row of res.data){
+    if(!row.qty||row.qty<=0)continue;
+    if(!assignments[row.shelf_id])assignments[row.shelf_id]=[];
+    let entry=assignments[row.shelf_id].find(i=>i.code===row.sku_code);
+    if(!entry){entry={code:row.sku_code,batches:[]};assignments[row.shelf_id].push(entry);}
+    var jl=parseJ(row.ji_list).filter(function(e){return e&&(+e.q||0)>0;}).slice(0,3);
+    if(!jl.length&&(row.ji_qty||0)>0)jl=[{q:row.ji_qty,c:row.ji_company||'',i:row.ji_invoice||''}];
+    var jiTot=jl.reduce(function(a,e){return a+(+e.q||0);},0);
+    var wl=parseJ(row.weight_list).filter(function(w){return w&&String(w).trim();}).slice(0,3).map(String);
+    if(!wl.length&&row.weight)wl=[row.weight];
+    entry.batches.push({batchId:row.batch_id,arrival:row.arrival,qty:row.qty,weight:wl.join(' / '),weightList:wl,jiQty:jiTot,jiList:jl,jiCompany:jl.length?(jl[0].c||''):'',jiInvoice:jl.length?(jl[0].i||''):''});
+  }
+  setSyncState('ok');
+}
+async function loadHistory() {
+  const res=await sb.from('change_history').select('*').order('ts',{ascending:false}).limit(200);
+  if(res.data)history=res.data;
+}
+async function dbAddHistory(action,sku,from,to,qty) {
+  const row={user_email:currentUser.email,action,sku_code:sku||'',from_loc:from||'—',to_loc:to||'—',qty:qty!=null?String(qty):'—'};
+  const res=await sb.from('change_history').insert(row);
+  if(!res.error)history.unshift({...row,ts:new Date().toISOString()});
+}
+async function dbAddBatch(shelfId,skuCode,batchId,arrival,qty,weight,jiQty,jiCompany,jiInvoice,weightList,jiList) {
+  setSyncState('syncing');
+  var wl=(weightList&&weightList.length)?weightList:(weight?[weight]:[]);
+  var jl=(jiList&&jiList.length)?jiList:(((jiQty||0)>0)?[{q:jiQty,c:jiCompany||'',i:jiInvoice||''}]:[]);
+  var jiTot=jl.reduce(function(a,e){return a+(+e.q||0);},0);
+  var base={shelf_id:shelfId,sku_code:skuCode,batch_id:batchId,arrival:arrival,qty:qty,weight:wl.join(' / '),ji_qty:jiTot,ji_company:jl.length?(jl[0].c||''):'',ji_invoice:jl.length?(jl[0].i||''):''};
+  var row=HAS_MULTI?Object.assign({},base,{weight_list:wl,ji_list:jl}):base;
+  var res=await sb.from('assignments').insert(row);
+  if(res.error&&HAS_MULTI&&isMissingCol(res.error)){HAS_MULTI=false;res=await sb.from('assignments').insert(base);}
+  if(res.error){setSyncState('error');toast('Save failed: '+res.error.message,'err');return false;}
+  setSyncState('ok');return true;
+}
+async function dbUpdateQty(batchId,qty) {
+  setSyncState('syncing');
+  if(qty<=0){const res=await sb.from('assignments').delete().eq('batch_id',batchId);if(res.error){setSyncState('error');return false;}setSyncState('ok');return true;}
+  const res=await sb.from('assignments').update({qty}).eq('batch_id',batchId);
+  if(res.error){setSyncState('error');toast('Update failed: '+res.error.message,'err');return false;}
+  setSyncState('ok');return true;
+}
+async function dbDeleteBatch(batchId) {
+  setSyncState('syncing');
+  const res=await sb.from('assignments').delete().eq('batch_id',batchId);
+  if(res.error){setSyncState('error');toast('Delete failed: '+res.error.message,'err');return false;}
+  setSyncState('ok');return true;
+}
+async function dbDeleteEntry(shelfId,skuCode) {
+  setSyncState('syncing');
+  const res=await sb.from('assignments').delete().eq('shelf_id',shelfId).eq('sku_code',skuCode);
+  if(res.error){setSyncState('error');toast('Delete failed: '+res.error.message,'err');return false;}
+  setSyncState('ok');return true;
+}
+
+
+// ── 寄 (JI) CONSIGNMENT MANAGEMENT ──────────────────────────────────
+async function dbUpdateJi(batchId, jiList) {
+  setSyncState('syncing');
+  var jl=(jiList||[]).filter(function(e){return e&&(+e.q||0)>0;}).slice(0,3);
+  var jiTot=jl.reduce(function(a,e){return a+(+e.q||0);},0);
+  var base={ji_qty:jiTot,ji_company:jl.length?(jl[0].c||''):'',ji_invoice:jl.length?(jl[0].i||''):''};
+  var upd=HAS_MULTI?Object.assign({},base,{ji_list:jl}):base;
+  var res=await sb.from('assignments').update(upd).eq('batch_id',batchId);
+  if(res.error&&HAS_MULTI&&isMissingCol(res.error)){HAS_MULTI=false;res=await sb.from('assignments').update(base).eq('batch_id',batchId);}
+  if(res.error){setSyncState('error');toast('寄存更新失败 Update failed: '+res.error.message,'err');return false;}
+  setSyncState('ok');return true;
+}
+async function dbUpdateWeights(batchId, weightList) {
+  setSyncState('syncing');
+  var wl=(weightList||[]).filter(function(w){return w&&String(w).trim();}).slice(0,3).map(String);
+  var base={weight:wl.join(' / ')};
+  var upd=HAS_MULTI?Object.assign({},base,{weight_list:wl}):base;
+  var res=await sb.from('assignments').update(upd).eq('batch_id',batchId);
+  if(res.error&&HAS_MULTI&&isMissingCol(res.error)){HAS_MULTI=false;res=await sb.from('assignments').update(base).eq('batch_id',batchId);}
+  if(res.error){setSyncState('error');toast('重量更新失败 Weight update failed: '+res.error.message,'err');return false;}
+  setSyncState('ok');return true;
+}
+
+function openJiModal(shelfId, code, batchId) {
+  const entry=assignments[shelfId]?assignments[shelfId].find(i=>i.code===code):null;if(!entry)return;
+  const batch=entry.batches.find(b=>b.batchId===batchId);if(!batch)return;
+  document.getElementById('jiModalBatchId').value=batchId;
+  document.getElementById('jiModalShelfId').value=shelfId;
+  document.getElementById('jiModalCode').value=code;
+  document.getElementById('jiModalSku').textContent=code+' @ '+shelfLabel(shelfId);
+  document.getElementById('jiModalMax').textContent=batch.qty;
+  jiMaxQty=batch.qty;
+  var es=jiEntries(batch);
+  var h='';
+  for(var k=1;k<=3;k++){
+    var e0=es[k-1]||{q:0,c:'',i:''};
+    h+='<div style="border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:'+(k===1?'#fffdf7':'#fff')+';">';
+    h+='<div style="font-size:.72rem;font-weight:700;color:#c47a15;margin-bottom:6px;">客户 Customer '+k+(k>1?'（选填 optional）':'')+'</div>';
+    h+='<div class="modal-row"><label>寄存数量 Ji Qty:</label><input type="number" id="jiQty_'+k+'" value="'+(+e0.q||0)+'" min="0" max="'+batch.qty+'" oninput="jiRecalc()" style="width:80px;"/></div>';
+    h+='<div class="modal-row"><label>客户公司 Company:</label><input type="text" id="jiCo_'+k+'" value="'+escH(e0.c||'')+'" placeholder="公司名称 Company name" style="flex:1;width:auto;"/></div>';
+    h+='<div class="modal-row"><label>发票号 Invoice:</label><input type="text" id="jiInv_'+k+'" value="'+escH(e0.i||'')+'" placeholder="发票号码 Invoice no." style="flex:1;width:auto;"/></div>';
+    h+='</div>';
+  }
+  document.getElementById('jiRows').innerHTML=h;
+  jiRecalc();
+  document.getElementById('jiModalBg').style.display='flex';
+}
+function jiRecalc(){
+  var t=0;
+  for(var k=1;k<=3;k++){var el=document.getElementById('jiQty_'+k);if(el)t+=parseInt(el.value)||0;}
+  var tEl=document.getElementById('jiRunTotal'),aEl=document.getElementById('jiRunAvail');
+  if(tEl)tEl.textContent=t;
+  if(aEl){aEl.textContent=(jiMaxQty-t);aEl.style.color=(t>jiMaxQty)?'#d93025':'#1a7a3c';}
+}
+function closeJiModal(){document.getElementById('jiModalBg').style.display='none';}
+
+async function saveJi() {
+  const batchId=document.getElementById('jiModalBatchId').value;
+  const shelfId=document.getElementById('jiModalShelfId').value;
+  const code=document.getElementById('jiModalCode').value;
+  const entry=assignments[shelfId]?assignments[shelfId].find(i=>i.code===code):null;if(!entry)return;
+  const batch=entry.batches.find(b=>b.batchId===batchId);if(!batch)return;
+  var list=[];var seen={};
+  for(var k=1;k<=3;k++){
+    var q=parseInt(document.getElementById('jiQty_'+k).value)||0;
+    var c=document.getElementById('jiCo_'+k).value.trim();
+    var iv=document.getElementById('jiInv_'+k).value.trim();
+    if(q<=0)continue;
+    if(!c){toast('客户 '+k+' 请填写公司名称 Customer '+k+': company name required','err');return;}
+    var key=c.toLowerCase();
+    if(seen[key]){toast('客户公司重复 Duplicate company: '+c,'err');return;}
+    seen[key]=1;list.push({q:q,c:c,i:iv});
+  }
+  var tot=list.reduce(function(a,e){return a+e.q;},0);
+  if(tot>batch.qty){toast('寄存合计 '+tot+' 超过批次总数 '+batch.qty+' — Total Ji exceeds batch qty','err');return;}
+  const ok=await dbUpdateJi(batchId,list);
+  if(ok){
+    batch.jiList=list;batch.jiQty=tot;
+    batch.jiCompany=list.length?list[0].c:'';batch.jiInvoice=list.length?list[0].i:'';
+    closeJiModal();render();
+    toast(tot>0?('✅ 寄存已更新 Ji updated: '+tot+' 件 / '+list.length+' 家 company(ies)'):'✅ 寄存已清除 Ji cleared!');
+  }
+}
+async function clearJi() {
+  const batchId=document.getElementById('jiModalBatchId').value;
+  const shelfId=document.getElementById('jiModalShelfId').value;
+  const code=document.getElementById('jiModalCode').value;
+  const ok=await dbUpdateJi(batchId,[]);
+  if(ok){
+    const entry=assignments[shelfId]?assignments[shelfId].find(i=>i.code===code):null;
+    if(entry){const b=entry.batches.find(b=>b.batchId===batchId);if(b){b.jiQty=0;b.jiList=[];b.jiCompany='';b.jiInvoice='';}}
+    closeJiModal();render();toast('✅ 寄存已清除 Ji cleared!');
+  }
+}
+
+function parseJ(v){if(!v)return[];if(Array.isArray(v))return v;try{var p=JSON.parse(v);return Array.isArray(p)?p:[];}catch(e){return[];}}
+function jiEntries(b){return (Array.isArray(b.jiList)?b.jiList:[]).filter(function(e){return e&&(+e.q||0)>0;}).slice(0,3);}
+function wtEntries(b){return (Array.isArray(b.weightList)?b.weightList:[]).filter(function(w){return w&&String(w).trim();}).slice(0,3).map(String);}
+function jiCoLabel(b){var es=jiEntries(b);return es.map(function(e){return (e.c||'?')+' '+e.q+(e.i?' #'+e.i:'');}).join(' | ');}
+var HAS_MULTI=true;var jiMaxQty=0;
+function isMissingCol(err){var m=((err&&err.message)||'').toLowerCase();return m.indexOf('ji_list')>-1||m.indexOf('weight_list')>-1||(m.indexOf('column')>-1&&m.indexOf('does not exist')>-1);}
+function collectWeightBatches(P,Q,total){
+  var rows=[];
+  for(var k=1;k<=3;k++){
+    var w=(document.getElementById(P+k).value||'').trim();
+    var q=parseInt(document.getElementById(Q+k).value)||0;
+    if(q>0||w)rows.push({w:w,q:q,k:k});
+  }
+  var withQty=rows.filter(function(r){return r.q>0;});
+  if(!withQty.length)return [{qty:total,weight:rows.length?rows[0].w:''}];
+  for(var i=0;i<withQty.length;i++){
+    if(!withQty[i].w){toast('\u89c4\u683c '+withQty[i].k+' \u8bf7\u586b\u5199\u91cd\u91cf \u2014 Variation '+withQty[i].k+': weight required','err');return null;}
+  }
+  var seen={};
+  for(var i=0;i<withQty.length;i++){
+    var key=withQty[i].w.toLowerCase();
+    if(seen[key]){toast('\u91cd\u91cf\u89c4\u683c\u91cd\u590d Duplicate weight: '+withQty[i].w,'err');return null;}
+    seen[key]=1;
+  }
+  var sum=withQty.reduce(function(a,r){return a+r.q;},0);
+  if(sum!==total){toast('\u91cd\u91cf\u6570\u91cf\u5408\u8ba1 '+sum+' \u4e0e\u603b\u6570\u91cf '+total+' \u4e0d\u7b26 \u2014 Weight total must equal Quantity','err');return null;}
+  return withQty.map(function(r){return {qty:r.q,weight:r.w};});
+}
+function openWeightFromEl(el){openWeightModal(el.getAttribute('data-sid'),el.getAttribute('data-code'),el.getAttribute('data-bid'));}
+function splitFromEl(el){openSplitModal(el.getAttribute('data-sid'),el.getAttribute('data-code'),el.getAttribute('data-bid'));}
+function qtyFromEl(el){setBatchQtyFromDetail(el.getAttribute('data-sid'),el.getAttribute('data-code'),el.getAttribute('data-bid'),el.value);}
+function findBatch(sid,code,bid){
+  var entry=assignments[sid]?assignments[sid].find(function(i){return i.code===code;}):null;
+  if(!entry)return null;
+  var b=entry.batches.find(function(x){return x.batchId===bid;});
+  return b?{entry:entry,batch:b}:null;
+}
+function openWeightModal(sid,code,bid){
+  var f=findBatch(sid,code,bid); if(!f)return;
+  document.getElementById('wtEditSid').value=sid;
+  document.getElementById('wtEditCode').value=code;
+  document.getElementById('wtEditBid').value=bid;
+  document.getElementById('wtEditInfo').textContent=code+' @ '+shelfLabel(sid)+'  \u00b7  '+f.batch.qty+' \u4ef6 units';
+  document.getElementById('wtEditVal').value=f.batch.weight||'';
+  document.getElementById('wtEditBg').style.display='flex';
+  setTimeout(function(){document.getElementById('wtEditVal').focus();},50);
+}
+function closeWtEdit(){document.getElementById('wtEditBg').style.display='none';}
+async function saveWtEdit(){
+  var sid=document.getElementById('wtEditSid').value;
+  var code=document.getElementById('wtEditCode').value;
+  var bid=document.getElementById('wtEditBid').value;
+  var val=document.getElementById('wtEditVal').value.trim();
+  var ok=await dbUpdateWeights(bid, val?[val]:[]);
+  if(ok){
+    await dbAddHistory('\u91cd\u91cf\u66f4\u65b0 Weight update',code,shelfLabel(sid),null,null);
+    await loadAssignments(); closeWtEdit(); render();
+    if(document.getElementById('itemDetailPanel').style.display==='flex')openItemDetail(sid,code);
+    toast(val?('\u2705 \u91cd\u91cf\u5df2\u66f4\u65b0 Weight updated: '+val):'\u2705 \u91cd\u91cf\u5df2\u6e05\u9664 Weight cleared');
+  }
+}
+async function setBatchQtyFromDetail(sid,code,bid,val){
+  await setBatchQty(sid,code,bid,val);
+  var entry=assignments[sid]?assignments[sid].find(function(i){return i.code===code;}):null;
+  if(!entry||!entry.batches.length)closeItemDetail();else openItemDetail(sid,code);
+}
+function openSplitModal(sid,code,bid){
+  var f=findBatch(sid,code,bid); if(!f)return;
+  var b=f.batch;
+  if((b.jiQty||0)>0){toast('\u6b64\u6279\u6b21\u6709\u5bc4\u5b58\uff0c\u8bf7\u5148\u6e05\u9664\u5bc4\u5b58\u518d\u62c6\u5206 \u2014 Clear Ji before splitting','err');return;}
+  if(b.qty<2){toast('\u6570\u91cf\u4e0d\u8db3\uff0c\u65e0\u6cd5\u62c6\u5206 Qty too small to split','err');return;}
+  document.getElementById('splitSid').value=sid;
+  document.getElementById('splitCode').value=code;
+  document.getElementById('splitBid').value=bid;
+  document.getElementById('splitTotal').value=b.qty;
+  document.getElementById('splitInfo').textContent=code+' @ '+shelfLabel(sid)+'  \u00b7  '+fmtDate(b.arrival)+'  \u00b7  \u5171 '+b.qty+' \u4ef6 units';
+  var html='';
+  for(var k=1;k<=3;k++){
+    html+='<div class="modal-row"><label style="font-size:.72rem;color:#888;">\u89c4\u683c Variation '+k+':</label>';
+    html+='<input type="text" id="splitW'+k+'" value="'+(k===1?escH(b.weight||''):'')+'" placeholder="'+(k===1?'\u5982 10kg':'\u9009\u586b optional')+'" style="width:128px;"/>';
+    html+='<input type="number" id="splitQ'+k+'" value="'+(k===1?b.qty:0)+'" min="0" oninput="wtRecalc(\'split\')" style="width:68px;margin-left:6px;"/></div>';
+  }
+  document.getElementById('splitRows').innerHTML=html;
+  wtRecalc('split');
+  document.getElementById('splitBg').style.display='flex';
+}
+function closeSplit(){document.getElementById('splitBg').style.display='none';}
+async function saveSplit(){
+  var sid=document.getElementById('splitSid').value;
+  var code=document.getElementById('splitCode').value;
+  var bid=document.getElementById('splitBid').value;
+  var f=findBatch(sid,code,bid); if(!f)return;
+  var b=f.batch, total=b.qty;
+  var parts=collectWeightBatches('splitW','splitQ',total);
+  if(!parts)return;
+  var ok=await dbUpdateQty(bid,parts[0].qty);
+  if(ok)ok=await dbUpdateWeights(bid,parts[0].weight?[parts[0].weight]:[]);
+  for(var i=1;i<parts.length&&ok;i++){
+    var nid='b'+Date.now()+'s'+i+Math.random().toString(36).slice(2);
+    ok=await dbAddBatch(sid,code,nid,b.arrival,parts[i].qty,parts[i].weight,0,'','',parts[i].weight?[parts[i].weight]:[],[]);
+  }
+  if(ok){
+    await dbAddHistory('\u6279\u6b21\u62c6\u5206 Batch split',code,shelfLabel(sid),null,total);
+    await loadAssignments(); closeSplit(); render();
+    if(document.getElementById('itemDetailPanel').style.display==='flex')openItemDetail(sid,code);
+    toast('\u2705 \u5df2\u62c6\u5206 Split into '+parts.length+' \u4e2a\u6279\u6b21 batches');
+  }
+}
+function jiTipLabel(b){return jiEntries(b).map(function(e){return (e.c||'?')+' \u2014 '+e.q+' \u4ef6';}).join(' | ');}
+function wtCfg(tag){
+  if(tag==='assign')return {P:'assignWeight',Q:'assignWQty',T:'assignQty',A:'assignAlloc'};
+  if(tag==='ab')return {P:'abWeight',Q:'abWQty',T:'abQty',A:'abAlloc'};
+  return {P:'splitW',Q:'splitQ',T:'splitTotal',A:'splitAlloc'};
+}
+function wtRecalc(tag){
+  var c=wtCfg(tag);
+  var el=document.getElementById(c.A); if(!el)return;
+  var tEl=document.getElementById(c.T); if(!tEl)return;
+  var tot=parseInt(tEl.value)||0, sum=0, n=0;
+  for(var k=1;k<=3;k++){var q=parseInt((document.getElementById(c.Q+k)||{}).value)||0;if(q>0){sum+=q;n++;}}
+  if(!n){el.innerHTML=(tag==='split')?'\u8bf7\u586b\u5199\u5404\u89c4\u683c\u6570\u91cf Enter qty for each weight':'\u672a\u6309\u91cd\u91cf\u5206\u914d \u00b7 \u5c06\u5efa\u7acb 1 \u4e2a\u6279\u6b21 No weight split \u2014 creates 1 batch';el.style.background='#f5f6fa';return;}
+  var okm=(sum===tot);
+  el.innerHTML='\u5df2\u5206\u914d Allocated: <strong style="color:'+(okm?'#1a7a3c':'#d93025')+'">'+sum+'</strong> / '+tot+' \u00b7 '+(tag==='split'?'\u5c06\u5f97\u5230 ':'\u5c06\u5efa\u7acb ')+'<strong>'+n+'</strong> \u4e2a\u6279\u6b21 batches'+(okm?'':' \u26a0\ufe0f \u4e0d\u7b26 mismatch');
+  el.style.background=okm?'#eaf7ee':'#fff0f0';
+}
+function showJiTip(el){
+  var t=document.getElementById('jiTip'); if(!t)return;
+  var parts=(el.getAttribute('data-ji')||'').split('|').map(function(s){return s.trim();}).filter(Boolean);
+  if(!parts.length)return;
+  t.innerHTML='<div style="font-weight:700;color:#ffcc80;margin-bottom:3px;">\u5bc4\u5b58 Ji Consignment</div>'+parts.map(function(p){return '<div>\u2022 '+p+'</div>';}).join('');
+  t.style.display='block';
+  var r=el.getBoundingClientRect();
+  var top=r.top-t.offsetHeight-7; if(top<4)top=r.bottom+7;
+  var left=r.left; if(left+t.offsetWidth>window.innerWidth-8)left=window.innerWidth-t.offsetWidth-8;
+  if(left<4)left=4;
+  t.style.top=top+'px'; t.style.left=left+'px';
+}
+function hideJiTip(){var t=document.getElementById('jiTip');if(t)t.style.display='none';}
+function getJiItems() {
+  const items=[];
+  for(const z of getZones()) for(const r of z.racks) for(const s of r.shelves) {
+    for(const item of (assignments[s.id]||[])) {
+      const sku=getSKU(item.code);
+      for(const b of item.batches) {
+        var es=jiEntries(b);
+        if(!es.length)continue;
+        es.forEach(function(e,idx){
+          items.push({
+            zone:z.name,rack:r.name,shelf:s.name,
+            code:item.code,name:sku?sku.name:'',
+            arrival:b.arrival,totalQty:b.qty,jiQty:e.q,
+            availQty:b.qty-(b.jiQty||0),weight:b.weight||'',
+            jiCompany:e.c||'',jiInvoice:e.i||'',
+            custNo:(idx+1)+'/'+es.length
+          });
+        });
+      }
+    }
+  }
+  return items;
+}
+
+function exportJiItems() {
+  const items=getJiItems();
+  if(!items.length){toast('没有寄存货物 No Ji items found','err');return;}
+  const rows=[['货架区 Zone','货架 Rack','层级 Shelf','商品代码 SKU Code','商品名称 Item Name','到货日期 Arrival','批次总量 Total Qty','本客户寄存 This Cust Ji','批次可用 Avail Qty','重量 Weight','客户公司 Company','发票号 Invoice No.','客户序号 Cust #']];
+  items.forEach(it=>rows.push([it.zone,it.rack,it.shelf,it.code,it.name,it.arrival,it.totalQty,it.jiQty,it.availQty,it.weight,it.jiCompany,it.jiInvoice,it.custNo]));
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:8},{wch:8},{wch:8},{wch:16},{wch:36},{wch:14},{wch:10},{wch:10},{wch:10},{wch:10},{wch:24},{wch:18}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'寄存 Ji Items');
+  XLSX.writeFile(wb,'RackMap_寄存_Ji_'+todayStr()+'.xlsx');
+  toast('✅ 寄存报告已下载 Ji report downloaded');
+}
+
+// Manual qty entry
+async function setBatchQty(shelfId, code, batchId, val) {
+  const newQty=parseInt(val);
+  if(isNaN(newQty)||newQty<0){render();return;}
+  const entry=assignments[shelfId]?assignments[shelfId].find(i=>i.code===code):null;if(!entry)return;
+  const batch=entry.batches.find(b=>b.batchId===batchId);if(!batch)return;
+  if(newQty===batch.qty)return; // no change
+  if(newQty===0){
+    if(!confirm('数量将归零，是否删除此批次？\nQty will reach 0. Remove this batch?'))return;
+    const ok=await dbDeleteBatch(batchId);
+    if(ok){await dbAddHistory('批次删除(归零)',code,shelfLabel(shelfId),null,0);await loadAssignments();render();}
+    return;
+  }
+  if(newQty<(batch.jiQty||0)){toast('数量不能少于寄存数量 Cannot be less than Ji qty ('+batch.jiQty+')','err');render();return;}
+  const ok=await dbUpdateQty(batchId,newQty);
+  if(ok){await dbAddHistory('数量手动更新 Qty manual update',code,shelfLabel(shelfId),null,newQty);await loadAssignments();render();}
+}
+
+// ── REALTIME ──
+function setupRealtime() {
+  realtimeChannel=sb.channel('rm-changes')
+    .on('postgres_changes',{event:'*',schema:'public',table:'assignments'},async()=>{await loadAssignments();render();})
+    .subscribe();
+}
+
+// ── UNPLACED ITEMS MANAGER ──
+function getValidShelfIds(){const ids=new Set();for(const z of getZones())for(const r of z.racks)for(const s of r.shelves)ids.add(s.id);return ids;}
+function getUnplacedItems(){
+  const validIds=getValidShelfIds();const unplaced=[];
+  for(const[shelfId,items]of Object.entries(assignments)){
+    if(!validIds.has(shelfId)){
+      for(const item of items){
+        const totalQty=item.batches.reduce((a,b)=>a+b.qty,0);
+        unplaced.push({shelfId,code:item.code,batches:item.batches,totalQty});
+      }
+    }
+  }
+  return unplaced;
+}
+function openUnplacedManager(){renderUnplacedList();document.getElementById('unplacedManagerPanel').style.display='flex';}
+function closeUnplacedManager(){document.getElementById('unplacedManagerPanel').style.display='none';}
+function renderUnplacedList(){
+  const items=getUnplacedItems();
+  const countEl=document.getElementById('unplacedMgrCount');
+  if(countEl)countEl.textContent=items.length+' item'+(items.length!==1?'s':'')+' unplaced';
+  if(!items.length){document.getElementById('unplacedMgrBody').innerHTML='<div class="no-result" style="padding:30px;text-align:center;">✅ No unplaced items! Everything is assigned to a valid rack slot.</div>';return;}
+  let html='';
+  for(const item of items){
+    const sku=getSKU(item.code);
+    html+='<div class="sku-mgr-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding:12px;">';
+    html+='<div style="display:flex;align-items:center;gap:8px;width:100%;">';
+    html+='<div style="width:12px;height:12px;border-radius:50%;background:'+(sku?sku.color:'#888')+';flex-shrink:0;"></div>';
+    html+='<div style="flex:1;"><div style="font-family:DM Mono,monospace;font-size:.8rem;font-weight:700;color:#1a6fc4;">'+escH(item.code)+'</div>';
+    html+='<div style="font-size:.72rem;color:#6b7280;">'+escH(sku?sku.name:'Unknown SKU')+'</div></div>';
+    html+='<div style="font-size:.75rem;font-weight:700;color:#1a7a3c;">'+item.totalQty+' 件 · '+item.batches.length+' 批次 batch'+(item.batches.length!==1?'es':'')+'</div></div>';
+    html+='<div style="width:100%;background:#f9fafb;border-radius:6px;padding:6px 10px;">';
+    item.batches.forEach((b,i)=>{html+='<div style="font-size:.7rem;color:#555;padding:2px 0;">Batch '+(i+1)+': 📅 '+fmtDate(b.arrival)+' · Qty: <strong>'+b.qty+'</strong>'+(b.weight?' · ⚖️ '+escH(String(b.weight)):'')+'</div>';});
+    html+='<div style="font-size:.65rem;color:#aaa;margin-top:4px;">Orphaned shelf ID: <code>'+escH(item.shelfId)+'</code></div></div>';
+    html+='<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+    html+='<button style="font-size:.72rem;padding:5px 10px;" data-code="'+escH(item.code)+'" data-sid="'+escH(item.shelfId)+'" onclick="reassignUnplaced(this)">⇄ Reassign to Rack</button>';
+    html+='<button class="sec" style="font-size:.72rem;padding:5px 10px;color:#d93025;border-color:#d93025;" data-code="'+escH(item.code)+'" data-sid="'+escH(item.shelfId)+'" onclick="deleteUnplaced(this)">🗑 Delete All Batches</button>';
+    html+='</div></div>';
+  }
+  document.getElementById('unplacedMgrBody').innerHTML=html;
+}
+async function deleteUnplaced(btn){
+  const code=btn.dataset.code,sid=btn.dataset.sid;
+  if(!confirm('确认删除所有批次： | Delete ALL batches of '+code+' (孤立槽位)？ | from orphaned slot?'))return;
+  const ok=await dbDeleteEntry(sid,code);
+  if(ok){await dbAddHistory('Deleted unplaced',code,sid,null,null);await loadAssignments();renderUnplacedList();render();toast('🗑 已删除 Deleted');}
+}
+function reassignUnplaced(btn){
+  const code=btn.dataset.code,sid=btn.dataset.sid;
+  const entry=assignments[sid]?assignments[sid].find(i=>i.code===code):null;
+  if(!entry)return;
+  const totalQty=entry.batches.reduce((a,b)=>a+b.qty,0);
+  closeUnplacedManager();openMoveBlock(sid,code,totalQty);
+}
+async function deleteAllUnplaced(){
+  const items=getUnplacedItems();
+  if(!items.length){toast('没有未放置货物！No unplaced items!');return;}
+  if(!confirm('确认删除全部 '+items.length+' 件未放置货物 | unplaced item'+(items.length!==1?'s':'')+' (永久删除)？ | permanently?'))return;
+  for(const item of items){await dbDeleteEntry(item.shelfId,item.code);await dbAddHistory('Bulk deleted unplaced',item.code,item.shelfId,null,null);}
+  await loadAssignments();renderUnplacedList();render();toast('🗑 所有未放置货物已删除 All unplaced items deleted');
+}
+
+// ── RENDER ──
+function render(){renderSKUList();renderWarehouse();renderStats();}
+
+function renderSKUList(){
+  const filter=(document.getElementById('skuFilter')||{value:''}).value.toUpperCase();
+  const filtered=getAllSKUs().filter(s=>!filter||s.code.includes(filter)||s.name.toUpperCase().includes(filter));
+  document.getElementById('skuCount').textContent=getAllSKUs().length+' 种商品 SKUs';
+  let html='';
+  for(const s of filtered){
+    const total=getTotalQty(s.code);
+    const rawTotal=getRawQty(s.code);
+    const jiTotal=rawTotal-total;
+    const bcount=getBatchCount(s.code);
+    const locs=getShelfLocations(s.code);
+    const sc=s.code.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    html+='<div class="sku-item'+(selectedSKU===s.code?' selected':'')+'" onclick="selectSKU(\''+sc+'\')" draggable="true" ondragstart="sidebarDragStart(event,\''+sc+'\')">';
+    html+='<div class="sku-dot" style="background:'+s.color+'"></div>';
+    html+='<div class="sku-info">';
+    html+='<div class="sku-code">'+escH(s.code)+'</div>';
+    html+='<div class="sku-name">'+escH(s.name)+'</div>';
+    html+='<div class="sku-total">可用 Avail: <strong>'+total+'</strong>'+(jiTotal>0?' <span class=\"ji-badge-sm\">寄 '+jiTotal+'</span>':'')+(bcount?' · <strong style="color:#0077cc">'+bcount+'</strong> batch'+(bcount!==1?'es':''):'')+'</div>';
+    if(locs.length){
+      html+='<div class="sku-locs">📍 '+locs.slice(0,3).join(' · ')+(locs.length>3?' +'+(locs.length-3)+' more':'')+'</div>';
+    } else if(bcount>0){
+      html+='<div class="sku-locs sku-unplaced" data-code="'+escH(s.code)+'" onclick="event.stopPropagation();openUnplacedManager()">⚠️ Not placed — tap to fix</div>';
+    } else {
+      html+='<div class="sku-locs" style="color:#ccc">Not placed</div>';
+    }
+    html+='</div></div>';
+  }
+  document.getElementById('skuList').innerHTML=html;
+}
+
+function renderWarehouse(){
+  const map=document.getElementById('warehouseMap');
+  let html='';
+  const RS='flex:0 0 320px;width:320px;min-width:320px;max-width:320px;overflow:hidden;box-sizing:border-box;background:#fafbfc;border:1px solid #e2e4ed;border-radius:8px;';
+  const RRS='display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;padding-bottom:8px;';
+  const ZBS='background:#fff;border:1px solid #e2e4ed;border-radius:10px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:0;';
+  const BRS='display:flex;flex-direction:column;gap:2px;padding:2px 3px;';
+  const QCS='display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-top:2px;';
+  for(const z of getZones()){
+    const isZ=z.isZoneZ||z.id==='zZ'||z.id==='zY';
+    html+='<div class="zone-block" style="'+ZBS+'">';
+    html+='<div class="zone-header"><span class="zone-accent">▌</span><span class="zone-name">'+(isZ&&z.name!=='#01-22'?'Zone ':'')+escH(z.name)+'</span>';
+    html+='<button class="zone-del-btn" onclick="confirmDeleteZone(\''+z.id+'\')" title="Delete zone">🗑</button></div>';
+    if(isZ){
+      html+='<div class="rack-row zone-z-grid">';
+      for(const r of z.racks){
+        const s=r.shelves[0];
+        const items=assignments[s.id]||[];
+        const hl=selectedSKU&&items.some(i=>i.code===selectedSKU);
+        html+='<div class="z-slot'+(hl?' highlight':'')+(items.length?' z-slot-used':'')+'\" onclick="openAssign(\''+s.id+'\')" ondragover="shelfOver(event,\''+s.id+'\')" ondragleave="shelfLeave(\''+s.id+'\')" ondrop="shelfDrop(event,\''+s.id+'\')">';
+        html+='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><span class="z-slot-label">'+escH(r.name)+'</span><button class="rack-del-btn" onclick="event.stopPropagation();confirmDeleteZSlot(\''+z.id+'\',\''+r.id+'\')">✕</button></div>';
+        if(items.length){
+          for(const item of items){
+            const sku2=getAllSKUs().find(sk=>sk.code===item.code);if(!sku2)continue;
+            const st=item.batches.reduce((a,b)=>a+(b.qty-(b.jiQty||0)),0);
+            const sc2=item.code.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            html+='<div class="shelf-sku-block" style="width:100%;margin-bottom:3px;"><div class="shelf-sku-header">';
+            html+='<div class="row-dot" style="background:'+sku2.color+'"></div>';
+            html+='<div class="row-code" style="color:'+sku2.color+'" draggable="true" ondragstart="itemDragStart(event,\''+s.id+'\',\''+sc2+'\','+st+')" onclick="event.stopPropagation();openItemDetail(\''+s.id+'\',\''+sc2+'\')">'+escH(item.code)+'</div>';
+            html+='<span class="row-total">'+st+'</span>';
+            html+='<button class="row-act" onclick="event.stopPropagation();openMoveBlock(\''+s.id+'\',\''+sc2+'\','+st+')" title="Move">⇄</button>';
+            html+='<button class="row-act del" onclick="event.stopPropagation();removeEntry(\''+s.id+'\',\''+sc2+'\')">✕</button>';
+            html+='</div><div class="batch-list">';
+            item.batches.forEach(b=>{
+              html+='<div style="'+BRS+'">';
+              html+='<span class="batch-arr">📅 '+fmtDate(b.arrival)+'</span>';
+              html+='<span style="font-size:.56rem;color:'+(b.weight?'#e67e00':'#ccc')+';cursor:pointer;" title="修改重量 Edit weight" onclick="event.stopPropagation();openWeightModal(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\')">⚖️ '+(b.weight?escH(String(b.weight)):'+')+'</span>';
+              if(b.jiQty>0)html+='<span class="ji-badge" data-ji="'+escH(jiTipLabel(b))+'" onmouseenter="showJiTip(this)" onmouseleave="hideJiTip()">寄 '+b.jiQty+(jiEntries(b).length>1?' ('+jiEntries(b).length+'\u5bb6)':'')+'</span>';
+              html+='<div style="'+QCS+'">';
+              html+='<button class="bqty-btn m" style="width:15px;height:15px;padding:0;" onclick="event.stopPropagation();changeBatchQty(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\',-1)">−</button>';
+              html+='<input class="bqty-input" type="number" value="'+b.qty+'" min="0" style="width:28px!important;padding:0!important;height:15px;box-sizing:border-box;" onchange="event.stopPropagation();setBatchQty(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\',this.value)" onclick="event.stopPropagation()" />';
+              html+='<button class="bqty-btn p" style="width:15px;height:15px;padding:0;" onclick="event.stopPropagation();changeBatchQty(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\',1)">+</button>';
+              html+='<button class="ji-btn" style="padding:1px 3px;" onclick="event.stopPropagation();openJiModal(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\')">寄</button>';
+              html+='<button class="batch-del" style="padding:0;background:transparent;border:none;" onclick="event.stopPropagation();deleteBatch(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\')">&#x2715;</button>';
+              html+='</div></div>';
+            });
+            html+='</div><span class="add-batch-link" onclick="event.stopPropagation();openAddBatch(\''+s.id+'\',\''+sc2+'\')">＋ add batch</span></div>';
+          }
+        } else {
+          html+='<div class="empty-shelf">empty · click to assign</div>';
+        }
+        html+='</div>';
+      }
+      html+='</div>';
+      html+='<button class="add-struct-btn" onclick="addZoneZSlot(\''+z.id+'\')">＋ Add slot</button>';
+    } else {
+      html+='<div class="rack-row" style="'+RRS+'">';
+      for(const r of z.racks){
+        html+='<div class="rack" id="rk-'+r.id+'" style="'+RS+'" ondragover="rackOver(event,\''+r.id+'\')" ondragleave="rackLeave(\''+r.id+'\')" ondrop="rackDrop(event,\''+r.id+'\')">';
+        html+='<div class="rack-header"><span class="rack-name">'+escH(r.name)+'</span><button class="rack-del-btn" onclick="confirmDeleteRack(\''+z.id+'\',\''+r.id+'\')" title="Delete rack">✕</button></div>';
+        for(const s of r.shelves){
+          const items=assignments[s.id]||[];
+          const hl=selectedSKU&&items.some(i=>i.code===selectedSKU);
+          html+='<div class="shelf'+(hl?' highlight':'')+(items.length?'':'')+'" id="sh-'+s.id+'" onclick="openAssign(\''+s.id+'\')" ondragover="shelfOver(event,\''+s.id+'\')" ondragleave="shelfLeave(\''+s.id+'\')" ondrop="shelfDrop(event,\''+s.id+'\')">';
+          html+='<div class="shelf-top"><span class="shelf-label">'+escH(s.name)+'</span></div><div class="shelf-items">';
+          if(items.length){
+            for(const item of items){
+              const sku2=getAllSKUs().find(sk=>sk.code===item.code);if(!sku2)continue;
+              const st=item.batches.reduce((a,b)=>a+(b.qty-(b.jiQty||0)),0);
+              const sc2=item.code.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+              html+='<div class="shelf-sku-block"><div class="shelf-sku-header">';
+              html+='<div class="row-dot" style="background:'+sku2.color+'"></div>';
+              html+='<div class="row-code" style="color:'+sku2.color+';cursor:pointer;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" draggable="true" ondragstart="itemDragStart(event,\''+s.id+'\',\''+sc2+'\','+st+')" onclick="event.stopPropagation();openItemDetail(\''+s.id+'\',\''+sc2+'\')">'+escH(item.code)+'</div>';
+              html+='<span class="row-total">'+st+'</span>';
+              html+='<button class="row-act" style="padding:1px 3px;background:transparent;border:none;font-size:.56rem;" onclick="event.stopPropagation();openMoveBlock(\''+s.id+'\',\''+sc2+'\','+st+')" title="Move">⇄</button>';
+              html+='<button class="row-act del" style="padding:1px 3px;background:transparent;border:none;font-size:.56rem;" onclick="event.stopPropagation();removeEntry(\''+s.id+'\',\''+sc2+'\')">✕</button>';
+              html+='</div><div class="batch-list">';
+              item.batches.forEach(b=>{
+                html+='<div style="'+BRS+'">';
+                html+='<span style="font-size:.56rem;color:#0A9E8A;white-space:nowrap;">📅 '+fmtDate(b.arrival)+'</span>';
+                html+='<span style="font-size:.56rem;color:'+(b.weight?'#e67e00':'#ccc')+';cursor:pointer;" title="修改重量 Edit weight" onclick="event.stopPropagation();openWeightModal(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\')">⚖️ '+(b.weight?escH(String(b.weight)):'+')+'</span>';
+                if(b.jiQty>0)html+='<span class="ji-badge" data-ji="'+escH(jiTipLabel(b))+'" onmouseenter="showJiTip(this)" onmouseleave="hideJiTip()">寄 '+b.jiQty+(jiEntries(b).length>1?' ('+jiEntries(b).length+'\u5bb6)':'')+'</span>';
+                html+='<div style="'+QCS+'">';
+                html+='<button class="bqty-btn m" style="width:15px;height:15px;padding:0;flex-shrink:0;" onclick="event.stopPropagation();changeBatchQty(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\',-1)">−</button>';
+                html+='<input class="bqty-input" type="number" value="'+b.qty+'" min="0" style="width:28px!important;padding:0!important;height:15px;box-sizing:border-box;flex-shrink:0;" onchange="event.stopPropagation();setBatchQty(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\',this.value)" onclick="event.stopPropagation()" />';
+                html+='<button class="bqty-btn p" style="width:15px;height:15px;padding:0;flex-shrink:0;" onclick="event.stopPropagation();changeBatchQty(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\',1)">+</button>';
+                html+='<button class="ji-btn" style="padding:1px 3px;flex-shrink:0;" onclick="event.stopPropagation();openJiModal(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\')">寄</button>';
+                html+='<button style="padding:0;background:transparent;border:none;color:#ddd;font-size:.52rem;flex-shrink:0;cursor:pointer;" onclick="event.stopPropagation();deleteBatch(\''+s.id+'\',\''+sc2+'\',\''+b.batchId+'\')">✕</button>';
+                html+='</div></div>';
+              });
+              html+='</div><span class="add-batch-link" onclick="event.stopPropagation();openAddBatch(\''+s.id+'\',\''+sc2+'\')">＋ add batch</span></div>';
+            }
+          } else {
+            html+='<div class="empty-shelf">empty · click to assign</div>';
+          }
+          html+='</div></div>';
+        }
+        html+='</div>';
+      }
+      html+='</div>';
+      html+='<button class="add-struct-btn" onclick="addRackToZone(\''+z.id+'\')">＋ Add rack column</button>';
+    }
+    html+='</div>';
+  }
+  html+='<div class="add-zone-row"><button class="add-zone-btn" onclick="addRegularZone()">＋ Add R/L Zone</button><button class="add-zone-btn" onclick="addZoneZ()">＋ Add Zone Z (grid)</button></div>';
+  map.innerHTML=html;
+}
+
+
+function renderStats(){
+  const totalSlots=getZones().flatMap(z=>z.racks).flatMap(r=>r.shelves).length;
+  const usedSlots=Object.keys(assignments).filter(k=>assignments[k]&&assignments[k].length).length;
+  const allBatches=Object.values(assignments).flat().flatMap(e=>e.batches);
+  const totalUnits=allBatches.reduce((a,b)=>a+(b.qty-(b.jiQty||0)),0);
+  const totalJi=allBatches.reduce((a,b)=>a+(b.jiQty||0),0);
+  const unplacedCount=getUnplacedItems().length;
+  const unplacedBtn=unplacedCount>0?'<span class="stat-link" style="background:#fff0f0;color:#d93025;" onclick="openUnplacedManager()">⚠️ '+unplacedCount+' 件未放置 Unplaced</span>':'';
+  const jiBtn=totalJi>0?'<span class="stat-link" style="background:#fff8e6;color:#c47a15;font-weight:700;" onclick="exportJiItems()">📦 寄 '+totalJi+' 件 ↓ Ji Report</span>':'';
+  document.getElementById('statsBar').innerHTML=
+    '<div class="stat">📦 <strong>'+getAllSKUs().length+'</strong> 种商品 SKUs</div>'+
+    '<div class="stat">🗂 <strong>'+usedSlots+'</strong>/'+totalSlots+' 槽位已用 slots used</div>'+
+    '<div class="stat">🔢 <strong>'+totalUnits+'</strong> 件可用 units available</div>'+
+    (totalJi>0?'<div class="stat" style="color:#c47a15;">📦 寄存 <strong>'+totalJi+'</strong> 件 Ji held</div>':'')+
+    unplacedBtn+
+    '<span class="stat-link" onclick="showHistory()">📋 变更历史 History</span>'+
+    jiBtn+
+    '<span class="stat-link" onclick="exportFullReport()" title="管理报告含寄存明细 Management report with Ji detail">📊 管理报告 Mgmt Report ↓</span>';
+}
+
+function selectSKU(code){selectedSKU=(selectedSKU===code)?null:code;render();}
+
+// ── STRUCTURE MANAGEMENT ──
+function addRegularZone(){
+  const name=prompt('区域名称（如 R21 或 L21）: | Zone name (e.g. R21 or L21):');if(!name)return;
+  const cols=prompt('列字母（如 A,B,C,D,E,F）: | Column letters (e.g. A,B,C,D,E,F):','A,B,C,D,E,F');if(!cols)return;
+  const colArr=cols.split(',').map(c=>c.trim()).filter(Boolean);
+  const zid='z'+name.replace(/\s/g,'');
+  if(getZones().find(z=>z.id===zid)){alert('该区域已存在！Zone already exists!');return;}
+  const racks=colArr.map(col=>{const rname=name+col;return{id:'r'+rname,name:rname,shelves:[{id:'s'+rname+'_1',name:'Top'},{id:'s'+rname+'_2',name:'Middle'},{id:'s'+rname+'_3',name:'Bottom'}]};});
+  getZones().push({id:zid,name:name,racks});saveStructure();render();toast('✅ 区域 '+name+' 已添加！added!');
+}
+function addZoneZ(){
+  const name=prompt('区域名称（如 New Incoming）: | Zone name (e.g. New Incoming):');if(!name)return;
+  const count=parseInt(prompt('槽位数量 How many slots?','1'))||1;
+  const zid='z'+name.replace(/\s/g,'');
+  if(getZones().find(z=>z.id===zid)){alert('该区域已存在！Zone already exists!');return;}
+  const racks=[];
+  for(let i=1;i<=count;i++)racks.push({id:'r'+name+i,name:name+i,shelves:[{id:'s'+name+i,name:'Slot'}]});
+  getZones().push({id:zid,name:name,isZoneZ:true,racks});saveStructure();render();toast('✅ 区域 '+name+' 已添加！added!');
+}
+function addRackToZone(zid){
+  const zone=getZones().find(z=>z.id===zid);if(!zone)return;
+  const col=prompt('新列字母（如 G）: | New column letter (e.g. G):');if(!col)return;
+  const rname=zone.name+col.trim().toUpperCase();
+  if(zone.racks.find(r=>r.name===rname)){alert('该货架列已存在！Rack already exists!');return;}
+  zone.racks.push({id:'r'+rname,name:rname,shelves:[{id:'s'+rname+'_1',name:'Top'},{id:'s'+rname+'_2',name:'Middle'},{id:'s'+rname+'_3',name:'Bottom'}]});
+  saveStructure();render();toast('✅ '+rname+' 已添加！added!');
+}
+function addZoneZSlot(zid){
+  const zone=getZones().find(z=>z.id===zid);if(!zone)return;
+  const next=zone.racks.length+1;const sname=zone.name+next;
+  zone.racks.push({id:'r'+sname,name:sname,shelves:[{id:'s'+sname,name:'Slot'}]});
+  saveStructure();render();toast('✅ Slot '+sname+' 已添加！added!');
+}
+function confirmDeleteZone(zid){
+  const zone=getZones().find(z=>z.id===zid);if(!zone)return;
+  const hasData=zone.racks.some(r=>r.shelves.some(s=>assignments[s.id]&&assignments[s.id].length));
+  if(!confirm((hasData?'⚠️ 区域 '+zone.name+' 有库存！has stock! ':'')+'确认删除区域 Delete zone '+zone.name+'?'))return;
+  warehouseZones=getZones().filter(z=>z.id!==zid);saveStructure();render();toast('🗑 区域 '+zone.name+' 已删除 deleted');
+}
+function confirmDeleteRack(zid,rid){
+  const zone=getZones().find(z=>z.id===zid);if(!zone)return;
+  const rack=zone.racks.find(r=>r.id===rid);if(!rack)return;
+  const hasData=rack.shelves.some(s=>assignments[s.id]&&assignments[s.id].length);
+  if(!confirm((hasData?'⚠️ Rack '+rack.name+' 有库存！has stock! ':'')+'确认删除货架 Delete rack '+rack.name+'?'))return;
+  zone.racks=zone.racks.filter(r=>r.id!==rid);saveStructure();render();toast('🗑 货架 '+rack.name+' 已删除 deleted');
+}
+function confirmDeleteZSlot(zid,rid){
+  const zone=getZones().find(z=>z.id===zid);if(!zone)return;
+  const rack=zone.racks.find(r=>r.id===rid);if(!rack)return;
+  const hasData=rack.shelves.some(s=>assignments[s.id]&&assignments[s.id].length);
+  if(!confirm((hasData?'⚠️ Slot '+rack.name+' 有库存！has stock! ':'')+'确认删除槽位 Delete slot '+rack.name+'?'))return;
+  zone.racks=zone.racks.filter(r=>r.id!==rid);saveStructure();render();toast('🗑 槽位 '+rack.name+' 已删除 deleted');
+}
+
+// ── ASSIGN MODAL ──
+function openAssign(shelfId){
+  assignShelfId=shelfId;
+  const found=findShelfById(shelfId);
+  const loc=found?found.r.name+(found.s.name!=='Slot'?' – '+found.s.name:''):shelfId;
+  document.getElementById('assignLoc').textContent=loc;
+  let opts='<option value="">— Select SKU —</option>';
+  for(const s of getAllSKUs())opts+='<option value="'+escH(s.code)+'">'+escH(s.code)+' — '+escH(s.name)+'</option>';
+  document.getElementById('assignSku').innerHTML=opts;
+  document.getElementById('assignArrival').value=todayStr();
+  document.getElementById('assignQty').value=1;
+  for(var wk=1;wk<=3;wk++){document.getElementById('assignWeight'+wk).value='';document.getElementById('assignWQty'+wk).value=0;}wtRecalc('assign');
+  document.getElementById('assignBg').style.display='flex';
+}
+async function doAssign(){
+  const code=document.getElementById('assignSku').value;
+  const arrival=document.getElementById('assignArrival').value;
+  const qty=parseInt(document.getElementById('assignQty').value)||1;
+  if(!code){alert('Select a SKU.');return;}
+  if(!arrival){alert('Enter arrival date.');return;}
+  var batches=collectWeightBatches('assignWeight','assignWQty',qty);
+  if(!batches)return;
+  var okAll=true;
+  for(var i=0;i<batches.length;i++){
+    var bId='b'+Date.now()+'x'+i+Math.random().toString(36).slice(2);
+    var wl=batches[i].weight?[batches[i].weight]:[];
+    var ok=await dbAddBatch(assignShelfId,code,bId,arrival,batches[i].qty,batches[i].weight,0,'','',wl,[]);
+    if(!ok)okAll=false;
+  }
+  if(okAll){
+    await dbAddHistory('Added',code,null,shelfLabel(assignShelfId),qty);
+    await loadAssignments();
+    toast('\u2705 \u5df2\u6dfb\u52a0 Added: '+qty+' \u4ef6 / '+batches.length+' \u6279\u6b21 batch(es)');
+    closeAssign();render();
+  }
+}
+function closeAssign(){document.getElementById('assignBg').style.display='none';assignShelfId=null;}
+
+// ── ADD BATCH ──
+function openAddBatch(shelfId,code){
+  addBatchState={shelfId,code};
+  const found=findShelfById(shelfId);
+  const loc=found?found.r.name+(found.s.name!=='Slot'?' – '+found.s.name:''):shelfId;
+  document.getElementById('addBatchLoc').textContent=code+' @ '+loc;
+  document.getElementById('abArrival').value=todayStr();
+  document.getElementById('abQty').value=1;
+  for(var wk=1;wk<=3;wk++){document.getElementById('abWeight'+wk).value='';document.getElementById('abWQty'+wk).value=0;}wtRecalc('ab');
+  document.getElementById('addBatchBg').style.display='flex';
+}
+async function doAddBatch(){
+  if(!addBatchState)return;
+  const{shelfId,code}=addBatchState;
+  const arrival=document.getElementById('abArrival').value;
+  const qty=parseInt(document.getElementById('abQty').value)||1;
+  if(!arrival){alert('Enter arrival date.');return;}
+  var batches=collectWeightBatches('abWeight','abWQty',qty);
+  if(!batches)return;
+  var okAll=true;
+  for(var i=0;i<batches.length;i++){
+    var bId='b'+Date.now()+'x'+i+Math.random().toString(36).slice(2);
+    var wl=batches[i].weight?[batches[i].weight]:[];
+    var ok=await dbAddBatch(shelfId,code,bId,arrival,batches[i].qty,batches[i].weight,0,'','',wl,[]);
+    if(!ok)okAll=false;
+  }
+  if(okAll){
+    await dbAddHistory('Batch added',code,null,shelfLabel(shelfId),qty);
+    await loadAssignments();
+    toast('\u2705 \u6279\u6b21\u5df2\u6dfb\u52a0 Added: '+qty+' \u4ef6 / '+batches.length+' \u6279\u6b21 batch(es)');
+    closeAddBatch();render();
+  }
+}
+function closeAddBatch(){document.getElementById('addBatchBg').style.display='none';addBatchState=null;}
+
+// ── QTY / DELETE ──
+async function changeBatchQty(shelfId,code,batchId,delta){
+  const entry=assignments[shelfId]?assignments[shelfId].find(i=>i.code===code):null;if(!entry)return;
+  const batch=entry.batches.find(b=>b.batchId===batchId);if(!batch)return;
+  const newQty=batch.qty+delta;
+  if((batch.jiQty||0)>0&&newQty<batch.jiQty){toast('\u6570\u91cf\u4e0d\u80fd\u5c11\u4e8e\u5bc4\u5b58\u6570\u91cf Cannot go below Ji qty ('+batch.jiQty+')','err');return;}
+  if(newQty<=0){if(!confirm('数量将归零。是否删除此批次？ | Qty will reach 0. Remove this batch?'))return;const ok=await dbDeleteBatch(batchId);if(ok){await dbAddHistory('Batch removed (qty 0)',code,shelfLabel(shelfId),null,0);await loadAssignments();render();}return;}
+  const ok=await dbUpdateQty(batchId,newQty);
+  if(ok){await dbAddHistory('Qty '+(delta>0?'+':'')+delta,code,shelfLabel(shelfId),null,newQty);await loadAssignments();render();}
+}
+async function deleteBatch(shelfId,code,batchId){
+  if(!confirm('确认移除此批次？ | Remove this batch?'))return;
+  const ok=await dbDeleteBatch(batchId);
+  if(ok){await dbAddHistory('Batch removed',code,shelfLabel(shelfId),null,null);await loadAssignments();toast('🗑 已移除 Removed');render();}
+}
+async function removeEntry(shelfId,code){
+  if(!confirm('确认移除所有批次： | Remove all batches of '+code+' 从此货架？ |  from this slot?'))return;
+  const ok=await dbDeleteEntry(shelfId,code);
+  if(ok){await dbAddHistory('Removed',code,shelfLabel(shelfId),null,null);await loadAssignments();toast('🗑 已移除 Removed');render();}
+}
+
+// ── ITEM DETAIL POPUP ──
+function openItemDetail(shelfId,code){
+  const sku=getSKU(code);
+  const entry=assignments[shelfId]?assignments[shelfId].find(i=>i.code===code):null;
+  if(!entry)return;
+  const found=findShelfById(shelfId);
+  const locName=found?found.r.name+(found.s.name!=='Slot'?' – '+found.s.name:''):shelfId;
+  const totalQty=entry.batches.reduce((a,b)=>a+b.qty,0);
+  let html='<div style="margin-bottom:12px;">';
+  html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
+  html+='<div style="width:14px;height:14px;border-radius:50%;background:'+(sku?sku.color:'#888')+'"></div>';
+  html+='<div class="sp-code">'+escH(code)+'</div></div>';
+  html+='<div class="sp-name" style="margin-bottom:6px;">'+escH(sku?sku.name:'')+'</div>';
+  html+='<div style="font-size:.78rem;color:#555;margin-bottom:10px;">📍 '+escH(locName)+' · <strong>'+totalQty+'</strong> units total</div>';
+  html+='<table class="hist-table"><thead><tr><th>#</th><th>Arrival</th><th>Weight</th><th>Qty</th><th></th></tr></thead><tbody>';
+  entry.batches.forEach((b,i)=>{
+    html+='<tr>';
+    html+='<td>'+(i+1)+'</td>';
+    html+='<td>'+fmtDate(b.arrival)+'</td>';
+    var dat=' data-sid="'+escH(shelfId)+'" data-code="'+escH(code)+'" data-bid="'+escH(b.batchId)+'"';
+    html+='<td><span style="cursor:pointer;color:'+(b.weight?'#e67e00':'#bbb')+';" title="点击修改重量 Click to edit weight"'+dat+' onclick="openWeightFromEl(this)">⚖️ '+(b.weight?escH(String(b.weight)):'+')+'</span></td>';
+    html+='<td><input type="number" value="'+b.qty+'" min="0"'+dat+' onchange="qtyFromEl(this)" title="点击修改数量 Click to edit qty" style="width:64px;padding:3px 4px;border:1px solid #e2e4ed;border-radius:4px;font-weight:700;text-align:center;font-family:inherit;font-size:.8rem;"/></td>';
+    html+='<td style="white-space:nowrap;"><button class="batch-del" title="按重量拆分 Split by weight"'+dat+' onclick="splitFromEl(this)">✂️</button><button class="batch-del" title="删除批次 Delete batch"'+dat+' onclick="deleteBatchFromDetail(this)">✕</button></td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('itemDetailBody').innerHTML=html;
+  document.getElementById('itemDetailMoveBtn').onclick=function(){closeItemDetail();openMoveBlock(shelfId,code,totalQty);};
+  document.getElementById('itemDetailAddBatchBtn').onclick=function(){closeItemDetail();openAddBatch(shelfId,code);};
+  document.getElementById('itemDetailPanel').style.display='flex';
+}
+function closeItemDetail(){document.getElementById('itemDetailPanel').style.display='none';}
+async function deleteBatchFromDetail(btn){
+  const sid=btn.dataset.sid,code=btn.dataset.code,bid=btn.dataset.bid;
+  if(!confirm('确认移除此批次？ | Remove this batch?'))return;
+  const ok=await dbDeleteBatch(bid);
+  if(ok){await dbAddHistory('Batch removed',code,shelfLabel(sid),null,null);await loadAssignments();render();
+    const entry=assignments[sid]?assignments[sid].find(i=>i.code===code):null;
+    if(!entry||!entry.batches.length)closeItemDetail();else openItemDetail(sid,code);}
+}
+
+// ── MOVE ──
+function openMoveBlock(fromShelfId,code,maxQty){
+  moveState={fromShelfId,code,maxQty};
+  const loc=findShelfById(fromShelfId);
+  const locName=loc?loc.r.name+(loc.s.name!=='Slot'?' \u2013 '+loc.s.name:''):fromShelfId;
+  document.getElementById('moveInfo').innerHTML='Moving: <strong>'+escH(code)+'</strong><br>From: <strong>'+locName+'</strong><br>\u53ef\u79fb\u52a8 Movable (\u5bc4 excluded): <strong>'+maxQty+' \u4ef6 units</strong>';
+  let zOpts='';
+  for(const z of getZones())zOpts+='<option value="'+z.id+'">'+(z.isZoneZ&&z.name!=='#01-22'?'Zone ':'')+escH(z.name)+'</option>';
+  const selStyle='width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:.85rem;';
+  let rowsHtml='';
+  for(let i=1;i<=3;i++){
+    rowsHtml+='<div style="border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;background:'+(i===1?'#f8faff':'#fff')+';">';
+    rowsHtml+='<div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:6px;">\u76ee\u7684\u5730 Destination '+i+(i>1?'\uff08\u9009\u586b optional\uff09':'')+'</div>';
+    rowsHtml+='<select id="moveZone_'+i+'" onchange="updateMoveRack('+i+')" style="'+selStyle+'">'+zOpts+'</select>';
+    rowsHtml+='<select id="moveRack_'+i+'" onchange="updateMoveShelf('+i+')" style="'+selStyle+'"></select>';
+    rowsHtml+='<select id="moveShelf_'+i+'" style="'+selStyle+'"></select>';
+    rowsHtml+='<div class="modal-row"><label>\u6570\u91cf Qty:</label><input type="number" id="moveQty_'+i+'" value="'+(i===1?1:0)+'" min="0" max="'+maxQty+'"/></div>';
+    rowsHtml+='</div>';
+  }
+  document.getElementById('mvRows').innerHTML=rowsHtml;
+  for(let i=1;i<=3;i++)updateMoveRack(i);
+  document.getElementById('moveBg').style.display='flex';
+}
+function updateMoveRack(i){
+  i=i||1;
+  const zid=document.getElementById('moveZone_'+i).value;
+  const z=getZones().find(z=>z.id===zid);
+  const isSingleSlot=z&&z.isZoneZ&&z.racks.length===1;
+  document.getElementById('moveRack_'+i).style.display=isSingleSlot?'none':'';
+  document.getElementById('moveShelf_'+i).style.display=isSingleSlot?'none':'';
+  let opts='';if(z)for(const r of z.racks)opts+='<option value="'+r.id+'">'+escH(r.name)+'</option>';
+  document.getElementById('moveRack_'+i).innerHTML=opts;updateMoveShelf(i);
+}
+function updateMoveShelf(i){
+  i=i||1;
+  const rid=document.getElementById('moveRack_'+i).value;const found=findRackById(rid);
+  let opts='';if(found)for(const s of found.r.shelves)opts+='<option value="'+s.id+'">'+escH(s.name)+'</option>';
+  document.getElementById('moveShelf_'+i).innerHTML=opts;
+}
+async function confirmMove(){
+  if(!moveState)return;
+  const{fromShelfId,code,maxQty}=moveState;
+  // Collect destinations with qty > 0
+  const dests=[];
+  for(let i=1;i<=3;i++){
+    const q=parseInt(document.getElementById('moveQty_'+i).value)||0;
+    if(q<=0)continue;
+    const zid=document.getElementById('moveZone_'+i).value;
+    const z=getZones().find(z=>z.id===zid);
+    const isSingleSlot=z&&z.isZoneZ&&z.racks.length===1;
+    const toShelfId=isSingleSlot?z.racks[0].shelves[0].id:document.getElementById('moveShelf_'+i).value;
+    if(!toShelfId){alert('\u76ee\u7684\u5730 '+i+' \u65e0\u6548\u3002Destination '+i+' invalid.');return;}
+    if(toShelfId===fromShelfId){alert('\u76ee\u7684\u5730 '+i+' \u4e0e\u6765\u6e90\u76f8\u540c\u3002Destination '+i+' is the same slot.');return;}
+    dests.push({toShelfId,qty:q});
+  }
+  if(!dests.length){alert('\u8bf7\u81f3\u5c11\u586b\u5199\u4e00\u4e2a\u76ee\u7684\u5730\u6570\u91cf\u3002Enter qty for at least one destination.');return;}
+  const totalQty=dests.reduce((a,d)=>a+d.qty,0);
+  if(totalQty>maxQty){alert('\u603b\u6570\u8d85\u51fa\u53ef\u7528\uff01Total '+totalQty+' exceeds movable '+maxQty+'.');return;}
+  const srcEntry=assignments[fromShelfId]?assignments[fromShelfId].find(i=>i.code===code):null;if(!srcEntry)return;
+  // Working copy: FIFO by arrival, only available (non-Ji) units can move
+  const work=srcEntry.batches.map(b=>({batchId:b.batchId,arrival:b.arrival,qtyLeft:b.qty,availLeft:b.qty-(b.jiQty||0)})).sort((a,b)=>a.arrival.localeCompare(b.arrival));
+  const adds=[];
+  for(const d of dests){
+    let remaining=d.qty;
+    for(const w of work){
+      if(remaining<=0)break;
+      if(w.availLeft<=0)continue;
+      const take=Math.min(remaining,w.availLeft);
+      adds.push({toShelfId:d.toShelfId,arrival:w.arrival,take});
+      w.availLeft-=take;w.qtyLeft-=take;remaining-=take;
+    }
+  }
+  // Apply source batch updates (Ji-locked qty always stays behind)
+  for(const w of work){
+    const orig=srcEntry.batches.find(b=>b.batchId===w.batchId);
+    if(w.qtyLeft===orig.qty)continue;
+    if(w.qtyLeft===0)await dbDeleteBatch(w.batchId);
+    else await dbUpdateQty(w.batchId,w.qtyLeft);
+  }
+  // Create destination batches
+  for(const a of adds){
+    const newId='b'+Date.now()+Math.random().toString(36).slice(2);
+    await dbAddBatch(a.toShelfId,code,newId,a.arrival,a.take,'');
+  }
+  await sb.from('assignments').delete().lte('qty',0);
+  for(const d of dests)await dbAddHistory('Moved',code,shelfLabel(fromShelfId),shelfLabel(d.toShelfId),d.qty);
+  await loadAssignments();closeMove();render();
+  toast('\u2705 \u5df2\u79fb\u52a8 Moved '+totalQty+' \u4ef6 \u2192 '+dests.length+' \u4e2a\u4f4d\u7f6e slot(s)');
+}
+
+function closeMove(){document.getElementById('moveBg').style.display='none';moveState=null;}
+
+// ── HISTORY PANEL ──
+function showHistory(){
+  if(!history.length){document.getElementById('historyBody').innerHTML='<div class="no-result">No history yet.</div>';}
+  else{
+    let html='<table class="hist-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>SKU</th><th>From</th><th>To</th><th>Qty</th></tr></thead><tbody>';
+    for(const h of history){
+      html+='<tr>';
+      html+='<td style="white-space:nowrap;color:#555">'+fmtDateTime(h.ts)+'</td>';
+      html+='<td style="color:#555">'+escH(h.user_email||h.user||'')+'</td>';
+      html+='<td><strong>'+escH(h.action)+'</strong></td>';
+      html+='<td style="color:#0066cc;font-family:monospace;font-weight:600">'+escH(h.sku_code||h.sku||'')+'</td>';
+      html+='<td style="color:#0077aa">'+escH(String(h.from_loc||h.from||'—'))+'</td>';
+      html+='<td style="color:#0077aa">'+escH(String(h.to_loc||h.to||'—'))+'</td>';
+      html+='<td>'+escH(String(h.qty||'—'))+'</td>';
+      html+='</tr>';
+    }
+    html+='</tbody></table>';
+    document.getElementById('historyBody').innerHTML=html;
+  }
+  document.getElementById('historyPanel').style.display='flex';
+}
+function closeHistory(){document.getElementById('historyPanel').style.display='none';}
+
+// ── SEARCH ──
+function doSearch(){
+  const q=document.getElementById('searchInput').value.trim().toUpperCase();if(!q)return;
+  const matches=getAllSKUs().filter(s=>s.code.includes(q)||s.name.toUpperCase().includes(q));
+  document.getElementById('spTitle').textContent='SEARCH: "'+q+'" — '+matches.length+' 条结果 result'+(matches.length!==1?'s':'');
+  let html='';
+  if(!matches.length)html='<div class="no-result">No SKU found.</div>';
+  for(const s of matches){
+    const total=getTotalQty(s.code);
+    html+='<div class="sp-sku-block"><div class="sp-sku-title"><div class="sp-dot" style="background:'+s.color+'"></div><div class="sp-code">'+escH(s.code)+'</div><div class="sp-name">'+escH(s.name)+'</div><div class="sp-total">'+total+' units</div></div>';
+    let hasAny=false;
+    for(const z of getZones())for(const r of z.racks)for(const sh of r.shelves){
+      const entry=(assignments[sh.id]||[]).find(i=>i.code===s.code);
+      if(!entry||!entry.batches.length)continue;hasAny=true;
+      const st=entry.batches.reduce((a,b)=>a+(b.qty-(b.jiQty||0)),0);
+      const locName=r.name+(sh.name!=='Slot'?' – '+sh.name:'');
+      html+='<div class="sp-location-block"><div class="sp-loc-label">📍 '+escH(locName)+' ('+st+' units)</div>';
+      html+='<table class="hist-table"><thead><tr><th>#</th><th>Arrival</th><th>Weight</th><th>Qty</th></tr></thead><tbody>';
+      entry.batches.forEach((b,i)=>{html+='<tr><td>'+(i+1)+'</td><td>'+fmtDate(b.arrival)+'</td><td>'+(b.weight?'⚖️ '+escH(String(b.weight)):'—')+'</td><td><strong>'+b.qty+'</strong></td></tr>';});
+      html+='</tbody></table></div>';
+    }
+    if(!hasAny)html+='<div style="padding:6px 0;font-size:.8rem;color:#999">Not placed yet.</div>';
+    html+='</div>';
+  }
+  document.getElementById('spBody').innerHTML=html;
+  document.getElementById('searchPanel').style.display='flex';
+}
+function closeSearchPanel(){document.getElementById('searchPanel').style.display='none';}
+function clearSearch(){document.getElementById('searchInput').value='';selectedSKU=null;closeSearchPanel();render();}
+
+// ── DRAG AND DROP ──
+function itemDragStart(e,fromShelfId,code,qty){dragState={fromShelfId,code,qty,fromSidebar:false};e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',code);}
+function sidebarDragStart(e,code){dragState={fromShelfId:null,code,qty:null,fromSidebar:true};e.dataTransfer.effectAllowed='copy';e.dataTransfer.setData('text/plain',code);}
+document.addEventListener('dragend',()=>{dragState=null;document.querySelectorAll('.drag-over-shelf').forEach(el=>el.classList.remove('drag-over-shelf'));});
+function shelfOver(e,id){e.preventDefault();e.stopPropagation();document.getElementById('sh-'+id)?.classList.add('drag-over-shelf');}
+function shelfLeave(e,id){document.getElementById('sh-'+id)?.classList.remove('drag-over-shelf');}
+async function shelfDrop(e,toShelfId){
+  e.preventDefault();e.stopPropagation();
+  document.getElementById('sh-'+toShelfId)?.classList.remove('drag-over-shelf');
+  if(!dragState)return;
+  if(dragState.fromSidebar){openAssign(toShelfId);const sel=document.getElementById('assignSku');for(const o of sel.options){if(o.value===dragState.code){o.selected=true;break;}}dragState=null;return;}
+  if(dragState.fromShelfId===toShelfId){dragState=null;return;}
+  const srcEntry=assignments[dragState.fromShelfId]?assignments[dragState.fromShelfId].find(i=>i.code===dragState.code):null;
+  if(!srcEntry){dragState=null;return;}
+  const fromShelfId=dragState.fromShelfId;const moveCode=dragState.code;
+  const batchesCopy=srcEntry.batches.map(b=>({...b}));
+  for(const b of batchesCopy)await dbDeleteBatch(b.batchId);
+  for(const b of batchesCopy){const newId='b'+Date.now()+Math.random().toString(36).slice(2);await dbAddBatch(toShelfId,moveCode,newId,b.arrival,b.qty,b.weight||'',b.jiQty||0,b.jiCompany||'',b.jiInvoice||'');}
+  await sb.from('assignments').delete().lte('qty',0);
+  await dbAddHistory('Moved (drag)',moveCode,shelfLabel(fromShelfId),shelfLabel(toShelfId),'—');
+  await loadAssignments();dragState=null;render();toast('✅ Moved');
+}
+function rackOver(e,id){e.preventDefault();document.getElementById('rk-'+id)?.classList.add('drag-over');}
+function rackLeave(id){document.getElementById('rk-'+id)?.classList.remove('drag-over');}
+function rackDrop(e,id){document.getElementById('rk-'+id)?.classList.remove('drag-over');}
+
+// ── EXCEL EXPORT ──
+function exportToExcel(){
+  var wb=XLSX.utils.book_new();
+  var sum=[['SKU Code','Item Name','Total Units','Locations']];
+  for(var s of getAllSKUs()){var t=getTotalQty(s.code);if(t>0)sum.push([s.code,s.name,t,getShelfLocations(s.code).join(', ')]);}
+  var ws1=XLSX.utils.aoa_to_sheet(sum);ws1['!cols']=[{wch:18},{wch:45},{wch:12},{wch:50}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Stock Summary');
+  var det=[['Zone','Rack','Shelf','SKU Code','Item Name','Arrival Date','Weight','数量 | Qty']];
+  for(var z of getZones())for(var r of z.racks)for(var sh of r.shelves){
+    for(var item of(assignments[sh.id]||[])){
+      var sku2=getAllSKUs().find(sk=>sk.code===item.code);
+      item.batches.slice().sort((a,b)=>a.arrival.localeCompare(b.arrival)).forEach(b=>{det.push([z.name,r.name,sh.name,item.code,sku2?sku2.name:'',b.arrival,b.weight||'',b.qty]);});
+    }
+  }
+  var ws2=XLSX.utils.aoa_to_sheet(det);ws2['!cols']=[{wch:8},{wch:10},{wch:10},{wch:18},{wch:40},{wch:14},{wch:10},{wch:8}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Batch Detail');
+  var hist=[['时间 | Time','用户 | User','操作 | Action','SKU','来源 | From','目标 | To','数量 | Qty']];
+  for(var h of history)hist.push([fmtDateTime(h.ts),h.user_email||h.user||'',h.action,h.sku_code||h.sku||'',h.from_loc||h.from||'—',h.to_loc||h.to||'—',h.qty||'—']);
+  var ws3=XLSX.utils.aoa_to_sheet(hist);ws3['!cols']=[{wch:18},{wch:25},{wch:14},{wch:18},{wch:20},{wch:20},{wch:8}];
+  XLSX.utils.book_append_sheet(wb,ws3,'Change History');
+  // Grid map
+  function cellContent(shelfId){var items=assignments[shelfId]||[];if(!items.length)return'';return items.map(function(it){return it.code+' ('+it.batches.reduce(function(a,b){return a+b.qty;},0)+')';}).join(', ');}
+  var gridRows=[];
+  var rNums=[];for(var rn=1;rn<=20;rn++)rNums.push(rn);
+  var rCols=['A','B','C','D','E','F'],shNames=['Top','Middle','Bottom'];
+  var rhRow=['RIGHT'];for(var i=0;i<rNums.length;i++)rhRow.push(rNums[i]);gridRows.push(rhRow);
+  for(var rci=0;rci<rCols.length;rci++){var col=rCols[rci];for(var rsi=0;rsi<shNames.length;rsi++){var shN=shNames[rsi];var row=[col+'-'+shN];for(var rni=0;rni<rNums.length;rni++){var zname='R'+rNums[rni];var zone=null;for(var zi=0;zi<getZones().length;zi++){if(getZones()[zi].name===zname){zone=getZones()[zi];break;}}if(!zone){row.push('');continue;}var rack=null;for(var ri2=0;ri2<zone.racks.length;ri2++){if(zone.racks[ri2].name===zname+col){rack=zone.racks[ri2];break;}}if(!rack){row.push('');continue;}var shelf=null;for(var si2=0;si2<rack.shelves.length;si2++){if(rack.shelves[si2].name===shN){shelf=rack.shelves[si2];break;}}row.push(shelf?cellContent(shelf.id):'');}gridRows.push(row);}var blankR=[''];for(var bi=0;bi<20;bi++)blankR.push('');gridRows.push(blankR);}
+  gridRows.push([]);gridRows.push([]);
+  var lNums=[];for(var ln=1;ln<=20;ln++)lNums.push(ln);var lCols=['A','B'];
+  var lhRow=['LEFT'];for(var li=0;li<lNums.length;li++)lhRow.push(lNums[li]);gridRows.push(lhRow);
+  for(var lci=0;lci<lCols.length;lci++){var lcol=lCols[lci];for(var lsi=0;lsi<shNames.length;lsi++){var lshN=shNames[lsi];var lrow=[lcol+'-'+lshN];for(var lni=0;lni<lNums.length;lni++){var lzname='L'+lNums[lni];var lzone=null;for(var lzi=0;lzi<getZones().length;lzi++){if(getZones()[lzi].name===lzname){lzone=getZones()[lzi];break;}}if(!lzone){lrow.push('');continue;}var lrack=null;for(var lri=0;lri<lzone.racks.length;lri++){if(lzone.racks[lri].name===lzname+lcol){lrack=lzone.racks[lri];break;}}if(!lrack){lrow.push('');continue;}var lshelf=null;for(var lshi=0;lshi<lrack.shelves.length;lshi++){if(lrack.shelves[lshi].name===lshN){lshelf=lrack.shelves[lshi];break;}}lrow.push(lshelf?cellContent(lshelf.id):'');}gridRows.push(lrow);}var lblankR=[''];for(var lbi=0;lbi<20;lbi++)lblankR.push('');gridRows.push(lblankR);}
+  gridRows.push([]);gridRows.push([]);gridRows.push(['ZONE Y & Z']);
+  var zZones=getZones().filter(function(z){return z.isZoneZ;});
+  for(var zzi=0;zzi<zZones.length;zzi++){var zzone=zZones[zzi];if(zzi>0)gridRows.push(['Zone '+zzone.name]);var zRow=[];for(var zsi=0;zsi<zzone.racks.length;zsi++){var zSlot=zzone.racks[zsi];var zSh=zSlot.shelves[0];zRow.push(zSlot.name+(zSh?': '+cellContent(zSh.id):''));if(zRow.length===5||zsi===zzone.racks.length-1){gridRows.push(zRow);zRow=[];}}  }
+  var ws4=XLSX.utils.aoa_to_sheet(gridRows);var gc=[{wch:12}];for(var g=0;g<20;g++)gc.push({wch:22});ws4['!cols']=gc;
+  XLSX.utils.book_append_sheet(wb,ws4,'Warehouse Grid Map');
+  XLSX.writeFile(wb,'RackMap_Export_'+todayStr()+'.xlsx');
+}
+
+function showFullReport(){ exportFullReport(); }
+function exportFullReport(){
+  try{
+    // ── Sheet 1: Stock Summary ──────────────────────────────────────
+    // All SKUs with stock, available qty (Ji excluded), location summary
+    const sum=[['商品代码 SKU Code','商品名称 Item Name','可用数量 Avail Qty','寄存数量 Ji Qty','总数量 Total Qty','批次数 Batches','货架位置 Locations']];
+    for(const s of getAllSKUs()){
+      const avail=getTotalQty(s.code);
+      const rawQty=getRawQty(s.code);
+      const jiQty=rawQty-avail;
+      if(!rawQty)continue;
+      const locs=[];let batches=0;
+      for(const z of getZones())for(const r of z.racks)for(const sh of r.shelves){
+        const e=(assignments[sh.id]||[]).find(i=>i.code===s.code);
+        if(!e||!e.batches.length)continue;
+        locs.push(r.name+'-'+sh.name);
+        batches+=e.batches.length;
+      }
+      sum.push([s.code,s.name,avail,jiQty,rawQty,batches,locs.join(', ')]);
+    }
+
+    // ── Sheet 2: Batch Detail ───────────────────────────────────────
+    // Every batch: zone, rack, shelf, SKU, arrival, qty, ji, avail, weight
+    const det=[['区域 Zone','货架 Rack','层级 Shelf','商品代码 SKU','商品名称 Name','到货日期 Arrival Date','批次总量 Total Qty','寄存数量 Ji Qty','可用数量 Avail Qty','重量 Weight','寄存公司 Ji Companies','客户数 # Cust']];
+    for(const z of getZones())for(const r of z.racks)for(const sh of r.shelves){
+      for(const item of (assignments[sh.id]||[])){
+        const sku=getSKU(item.code)||{name:''};
+        for(const b of item.batches){
+          det.push([z.name,r.name,sh.name,item.code,sku.name,b.arrival||'',b.qty,b.jiQty||0,b.qty-(b.jiQty||0),b.weight||'',jiCoLabel(b),String(jiEntries(b).length)]);
+        }
+      }
+    }
+
+    // ── Sheet 3: Ji Consignment Report ─────────────────────────────
+    // All Ji items only
+    const ji=[['区域 Zone','货架 Rack','层级 Shelf','商品代码 SKU','商品名称 Name','到货日期 Arrival','批次总量 Total Qty','寄存数量 Ji Qty','可用数量 Avail Qty','重量 Weight','客户公司 Company','发票号 Invoice No.']];
+    for(const z of getZones())for(const r of z.racks)for(const sh of r.shelves){
+      for(const item of (assignments[sh.id]||[])){
+        const sku=getSKU(item.code)||{name:''};
+        for(const b of item.batches){
+          jiEntries(b).forEach(function(e){ji.push([z.name,r.name,sh.name,item.code,sku.name,b.arrival||'',b.qty,e.q,b.qty-(b.jiQty||0),b.weight||'',e.c||'',e.i||'']);});
+        }
+      }
+    }
+
+    // ── Sheet 4: Change History ─────────────────────────────────────
+    const hist=[['时间 Timestamp','用户 User','操作 Action','商品代码 SKU','来源 From','目标 To','数量 Qty']];
+    if(Array.isArray(history)){
+      for(const h of history)hist.push([h.ts||'',h.user_email||'',h.action||'',h.sku_code||'',h.from_loc||'',h.to_loc||'',h.qty||'']);
+    }
+
+    // ── Sheet 5: Warehouse Grid Map ─────────────────────────────────
+    const grid=[['区域 Zone','货架 Rack','层级 Shelf','状态 Status','商品代码 SKU','商品名称 Name','可用数量 Avail Qty','到货日期 Arrival']];
+    for(const z of getZones())for(const r of z.racks)for(const sh of r.shelves){
+      const items=assignments[sh.id]||[];
+      if(!items.length){
+        grid.push([z.name,r.name,sh.name,'空 Empty','','','','']);
+      } else {
+        for(const item of items){
+          const sku=getSKU(item.code)||{name:''};
+          const avail=item.batches.reduce((a,b)=>a+(b.qty-(b.jiQty||0)),0);
+          const latest=item.batches.slice().sort((a,b)=>b.arrival>a.arrival?1:-1)[0];
+          grid.push([z.name,r.name,sh.name,'有货 In Use',item.code,sku.name,avail,latest?latest.arrival:'']);
+        }
+      }
+    }
+
+    const wb=XLSX.utils.book_new();
+    const ws1=XLSX.utils.aoa_to_sheet(sum);
+    ws1['!cols']=[{wch:16},{wch:36},{wch:12},{wch:10},{wch:10},{wch:8},{wch:36}];
+    const ws2=XLSX.utils.aoa_to_sheet(det);
+    ws2['!cols']=[{wch:8},{wch:8},{wch:8},{wch:16},{wch:36},{wch:14},{wch:10},{wch:10},{wch:10},{wch:10},{wch:24},{wch:16}];
+    const ws3=XLSX.utils.aoa_to_sheet(ji);
+    ws3['!cols']=[{wch:8},{wch:8},{wch:8},{wch:16},{wch:36},{wch:14},{wch:10},{wch:10},{wch:10},{wch:10},{wch:24},{wch:16}];
+    const ws4=XLSX.utils.aoa_to_sheet(hist);
+    ws4['!cols']=[{wch:22},{wch:26},{wch:22},{wch:16},{wch:16},{wch:16},{wch:8}];
+    const ws5=XLSX.utils.aoa_to_sheet(grid);
+    ws5['!cols']=[{wch:8},{wch:8},{wch:8},{wch:10},{wch:16},{wch:36},{wch:10},{wch:14}];
+    XLSX.utils.book_append_sheet(wb,ws1,'库存汇总 Stock Summary');
+    XLSX.utils.book_append_sheet(wb,ws2,'批次明细 Batch Detail');
+    XLSX.utils.book_append_sheet(wb,ws3,'寄存报告 Ji Report');
+    XLSX.utils.book_append_sheet(wb,ws4,'变更历史 Change History');
+    XLSX.utils.book_append_sheet(wb,ws5,'仓库地图 Grid Map');
+    XLSX.writeFile(wb,'RackMap_完整报告_'+todayStr()+'.xlsx');
+    toast('✅ 完整报告已下载 Full report downloaded');
+  } catch(e){
+    console.error('Export error:',e);
+    toast('导出失败 Export failed: '+e.message,'err');
+  }
+}
+
+
+
+</script>
+<div id="jiTip" style="display:none;position:fixed;z-index:9999;background:#2b2b2b;color:#fff;padding:6px 11px;border-radius:6px;font-size:.68rem;line-height:1.55;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.32);pointer-events:none;"></div>
+<!-- Edit Weight -->
+<div class="modal-bg" id="wtEditBg" style="display:none;">
+  <div class="modal" style="max-width:400px;">
+    <h3>⚖️ 修改重量 Edit Weight</h3>
+    <div class="modal-loc" id="wtEditInfo" style="margin-bottom:12px;"></div>
+    <input type="hidden" id="wtEditSid"/><input type="hidden" id="wtEditCode"/><input type="hidden" id="wtEditBid"/>
+    <div class="modal-row"><label>重量 Weight:</label><input type="text" id="wtEditVal" placeholder="如 10kg e.g. 10kg" style="flex:1;width:auto;"/></div>
+    <div style="font-size:.68rem;color:#999;margin-bottom:6px;">留空可清除重量。Leave blank to clear the weight.</div>
+    <div class="modal-btns"><button class="sec" onclick="closeWtEdit()">取消 Cancel</button><button onclick="saveWtEdit()">保存 Save</button></div>
+  </div>
+</div>
+<!-- Split Batch -->
+<div class="modal-bg" id="splitBg" style="display:none;">
+  <div class="modal" style="max-width:470px;">
+    <h3>✂️ 按重量拆分批次 Split Batch by Weight</h3>
+    <div class="modal-loc" id="splitInfo" style="margin-bottom:12px;"></div>
+    <input type="hidden" id="splitSid"/><input type="hidden" id="splitCode"/><input type="hidden" id="splitBid"/><input type="hidden" id="splitTotal"/>
+    <div class="modal-section">拆分为（最多 3 种重量）Split into (up to 3 weights):</div>
+    <div id="splitRows"></div>
+    <div id="splitAlloc" style="border-radius:6px;padding:6px 12px;font-size:.74rem;margin-bottom:6px;background:#f5f6fa;"></div>
+    <div style="font-size:.66rem;color:#999;margin-bottom:8px;">合计须等于原批次数量；到货日期保持不变。Total must equal the original qty; arrival date is kept.</div>
+    <div class="modal-btns"><button class="sec" onclick="closeSplit()">取消 Cancel</button><button onclick="saveSplit()">✂️ 拆分 Split</button></div>
+  </div>
+</div>
+</body>
+</html>
